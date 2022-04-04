@@ -1,0 +1,8 @@
+x : Integer;
+x = 7;
+
+letExample : Integer -> Integer;
+letExample = let x = 3 in lambda{Integer -> Integer} t -> 3 + t;
+
+main : Bool;
+main = letExample 5 == 8;

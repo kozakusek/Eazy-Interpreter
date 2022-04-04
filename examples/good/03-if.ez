@@ -1,0 +1,28 @@
+isNegativeToInt : Integer -> Integer;
+isNegativeToInt x = 1 if x < 0 otherwise 0;
+
+is42 : Integer -> Integer;
+is42 x = (
+    1 if x == 42 
+    otherwise 0
+);
+
+isNotTrue : Bool -> Bool;
+isNotTrue x = (True
+    if x == False 
+    otherwise False
+);
+
+isEven : Integer -> Integer;
+isEven n = (1
+    if (n / 2) * 2 == n
+    otherwise
+        1337 * 0
+);
+
+isOdd : Integer -> Integer;
+isOdd n = 1 if (n / 2) * 2 =/= n
+    otherwise 1337 * 1;
+
+main : Integer;
+main = isEven 42 == 1;

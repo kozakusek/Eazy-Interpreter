@@ -1,0 +1,110 @@
+-- programs ------------------------------------------------
+
+entrypoints Program ;
+
+ProgramT.   Program ::= [Decl] ;
+
+-- tokens --------------------------------------------------
+
+token VarIdent (lower (letter | digit | '_')*) ;
+token ConIdent (upper (letter | digit | '_')*) ;
+
+separator VarIdent "" ;
+
+-- literals ------------------------------------------------
+
+LitInt.    Literal ::= Integer ;
+LitTrue.   Literal ::= "True" ;
+LitFalse.  Literal ::= "False" ;
+
+-- types --------------------------------------------------
+
+SimpleTypeT. SimpleType ::= ConIdent [VarIdent] ;
+
+ConstrT. Constr ::= ConIdent [Type2] ;
+
+TypArr.  Type  ::= Type1 "->" Type ;
+TypApp.  Type1 ::= Type1 Type2 ;
+TypVar.  Type2 ::= VarIdent ;
+TypCon.  Type2 ::= ConIdent ;
+TypLst.  Type2 ::= "[" Type "]" ;
+
+coercions Type 2;
+
+separator nonempty Constr "|" ;
+separator Type2 "" ;
+
+-- declarations --------------------------------------------
+
+DeclData.   Decl ::= "type" SimpleType "=" [Constr] ;
+DeclFunc.   Decl ::= VarIdent [VarIdent] "=" Expr ;
+DeclFunT.   Decl ::= VarIdent ":" Type ; 
+
+separator Decl ";" ;
+
+-- expressions ---------------------------------------------
+
+ExpIf.   Expr ::= Expr3 "if" Expr "otherwise" Expr ;
+ExpMth.  Expr ::= "match" Expr "with" "{" [Match] "}" ;
+ExpLet.  Expr ::= "let" "{" [Decl] "}" "in" Expr ;
+ExpLmb.  Expr ::= "lambda" "{" Type "}" [VarIdent] "->" Expr ;
+
+ExpOr.   Expr ::= Expr1 "||" Expr ;
+
+ExpAnd. Expr1 ::= Expr2 "&&" Expr1 ;
+
+ExpCmp. Expr2 ::= Expr2 CmpOp Expr3 ;
+
+ExpAdd. Expr3 ::= Expr3 AddOp Expr4 ;
+
+ExpMul. Expr4 ::= Expr4 MulOp Expr5 ;
+
+ExpChn. Expr5 ::= Expr6 "::" Expr5 ;
+
+ExpNot. Expr6 ::= "~" Expr7 ;
+ExpNeg. Expr6 ::= "-" Expr7 ;
+
+ExpApp. Expr7 ::= Expr7 Expr8 ;
+
+ExpLst. Expr8 ::= "[" [Expr] "]" ;
+ExpLit. Expr8 ::= Literal ;
+ExpCon. Expr8 ::= ConIdent ;
+ExpVar. Expr8 ::= VarIdent ;
+
+coercions Expr 8;
+
+separator Expr "," ;
+
+-- operators -----------------------------------------------
+
+OpAdd.   AddOp ::= "+" ;
+OpSub.   AddOp ::= "-" ;
+OpMul.   MulOp ::= "*" ;
+OpDiv.   MulOp ::= "/" ;
+OpEq.    CmpOp ::= "==" ;
+OpNeq.   CmpOp ::= "=/=" ;
+OpGrt.   CmpOp ::= ">" ;
+OpGeq.   CmpOp ::= ">=" ;
+OpLrt.   CmpOp ::= "<" ;
+OpLeq.   CmpOp ::= "<=" ;
+
+-- patterns ------------------------------------------------
+
+MatchT.     Match ::= Pattern "->" Expr ;
+
+PatCon.   Pattern ::= Constr ;
+PatLL.   Pattern1 ::= Pattern2 "::" Pattern1 ;
+PatLst.  Pattern2 ::= "[" [Pattern] "]" ;
+PatLit.  Pattern2 ::= Literal ;
+PatVar.  Pattern2 ::= VarIdent ;
+PatDef.  Pattern2 ::= "_" ;
+
+coercions Pattern 2;
+
+terminator nonempty Match ";" ;
+separator Pattern "," ;
+
+-- comments ------------------------------------------------
+
+comment "<3" ;
+comment "<3 {" "}" ;

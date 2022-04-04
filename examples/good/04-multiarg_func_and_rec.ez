@@ -1,0 +1,13 @@
+add8 : Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer;
+add8 x y z w v u t = x + y + z + w + v + u + t;
+
+fibonacci : Integer -> Integer;
+fibonacci n = n if n < 2 
+    otherwise fibonacci (n - 1) + fibonacci (n - 2);
+
+factorial : Integer -> Integer;
+factorial n = n if n < 2 
+    otherwise n * factorial (n - 1);
+
+main : Bool;
+main = factorial 7 == 5040;

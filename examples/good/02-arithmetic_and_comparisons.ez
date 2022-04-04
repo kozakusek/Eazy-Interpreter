@@ -1,0 +1,58 @@
+addition : Integer -> Integer -> Integer;
+addition a b = a + b;
+
+subtraction : Integer -> Integer -> Integer;
+subtraction a b = a - b;
+
+multiplication : Integer -> Integer -> Integer;
+multiplication a b = a * b;
+
+division : Integer -> Integer -> Integer;
+division a b = a / b;
+
+isEqual : Integer -> Integer -> Bool;
+isEqual a b = a == b;
+
+isNotEqual : Integer -> Integer -> Bool;
+isNotEqual a b = a =/= b;
+
+isGreater : Integer -> Integer -> Bool;
+isGreater a b = a > b;
+
+isLess : Integer -> Integer -> Bool;
+isLess a b = a < b;
+
+isLessOrEqual : Integer -> Integer -> Bool;
+isLessOrEqual a b = a <= b;
+
+isGreaterOrEqual : Integer -> Integer -> Bool;
+isGreaterOrEqual a b = a >= b;
+
+not : Bool -> Bool;
+not a = ~ a;
+
+land : Bool -> Bool -> Bool;
+land a b = a && b;
+
+lor : Bool -> Bool -> Bool;
+lor a b = a || b;
+
+negate : Integer -> Integer;
+negate a = - a;
+
+complexArithmeticAndComparison1 : Integer -> Integer -> Bool;
+complexArithmeticAndComparison1 a b = a + b * 2 == a * b + 2;
+
+complexArithmeticAndComparison2 : Integer -> Integer -> Bool;
+complexArithmeticAndComparison2 a b = ~ (a + b * -2 >= a * b + -2);
+
+bracketsExample : Integer -> Integer -> Integer;
+bracketsExample a b = (a + b) * (a - b);
+
+main : Bool;
+main = bracketsExample 1 2 == -3;
+
+<3 { Maybe in the future:
+- New operations
+- More types supported
+}

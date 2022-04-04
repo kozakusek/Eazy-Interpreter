@@ -1,0 +1,21 @@
+number : Integer;
+number = 42;
+
+constantlyFalse : Bool;
+constantlyFalse = False;
+
+main : Integer ;
+main = number ;
+
+<3 { Maybe in the future:
+
+doubleNumber : Double;
+doubleNumber = 3.1415;
+
+character : Char;
+character = 'a';
+
+string : String;
+string = "Hello, world!";
+
+}

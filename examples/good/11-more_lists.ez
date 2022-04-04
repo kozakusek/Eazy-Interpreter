@@ -1,0 +1,18 @@
+headFromhead : [[a]] -> a;
+headFromhead lst = match lst with { (h::t)::t -> h; };
+
+funcList : [Integer -> Integer];
+funcList = [
+    lambda{Integer -> Integer} x -> x + 1, 
+    lambda{Integer -> Integer} x -> x * 2, 
+    lambda{Integer -> Integer} x -> x - 1
+];
+
+applyFuncList : [Integer -> Integer] -> Integer -> Integer;
+applyFuncList lst x = match lst with {
+    [] -> x;
+    f::fs -> applyFuncList fs (f x);
+};
+
+main : Bool;
+main = applyFuncList funcList 3 == 5;
