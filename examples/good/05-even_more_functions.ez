@@ -10,7 +10,7 @@ suprisingPartialApplication f x = f (x + 1);
 main : Bool;
 main = (suprisingPartialApplication (lambda{Integer -> Integer -> Integer} x y -> x * y)) 2 3 == 9;
 
-<3 { Maybe in the future
+;* { Maybe in the future
  - haskell-like operators (.) & ($)
 
 complexFunction : (Integer -> Integer) -> (Integer -> Integer);

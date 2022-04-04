@@ -7,7 +7,7 @@ constantlyFalse = False;
 main : Integer ;
 main = number ;
 
-<3 { Maybe in the future:
+;* { Maybe in the future:
 
 doubleNumber : Double;
 doubleNumber = 3.1415;

@@ -106,5 +106,5 @@ separator Pattern "," ;
 
 -- comments ------------------------------------------------
 
-comment "<3" ;
-comment "<3 {" "}" ;
+comment ";*" ;
+comment ";* {" "}" ;
