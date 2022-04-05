@@ -1,0 +1,5 @@
+f : Integer -> Integer;
+f x = x + x + x + x;
+
+main : Integer;
+main = f True;

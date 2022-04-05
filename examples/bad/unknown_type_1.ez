@@ -1,0 +1,5 @@
+id : MyType -> MyType;
+id a = a;
+
+main : Integer;
+main = 0;

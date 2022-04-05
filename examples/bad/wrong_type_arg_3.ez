@@ -1,0 +1,11 @@
+type Tree = Empty | Full | WhoKnows;
+
+f : Tree -> Integer;
+f t = match t with {
+  Empty -> 0;
+  Full -> 1;
+  WhoKnows -> 2;
+};
+
+main : Integer;
+main = f False;

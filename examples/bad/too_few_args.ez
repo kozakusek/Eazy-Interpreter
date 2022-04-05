@@ -1,0 +1,5 @@
+f : Integer -> Integer -> Integer;
+f x y = x + y;
+
+main : Integer;
+main = f 1;

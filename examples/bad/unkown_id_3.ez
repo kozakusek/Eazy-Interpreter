@@ -1,0 +1,5 @@
+f : Integer -> Integer;
+f x = let { y = 2 } in x + y + z;
+
+main : Integer;
+main = f -1;

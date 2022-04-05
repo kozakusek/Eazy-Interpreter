@@ -1,0 +1,5 @@
+f : [Integer] -> Bool;
+f lst = True;
+
+main : Bool;
+main = f 2;

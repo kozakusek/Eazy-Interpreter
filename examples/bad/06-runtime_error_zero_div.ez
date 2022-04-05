@@ -1,9 +1,5 @@
 rememberCholerae : Integer -> Integer;
 rememberCholerae x = x / 0;
 
-;* Match examples in file 08-10 and 15
-noMatchHead : [a] -> a;
-noMatchHead lst = match lst with {h::t -> h;};
-
 main : Integer ;
 main = rememberCholerae 13;

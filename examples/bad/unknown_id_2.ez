@@ -1,0 +1,5 @@
+f : Integer -> Integer;
+f = lambda{Integer -> Integer} x -> t * 2;
+
+main : Integer;
+main = f 2;
