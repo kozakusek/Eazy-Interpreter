@@ -113,4 +113,4 @@ separator Pattern "," ;
 -- comments ------------------------------------------------
 
 comment ";*" ;
-comment ";* {" "}" ;
+comment ";)" "(;" ;

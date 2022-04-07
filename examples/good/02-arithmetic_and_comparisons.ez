@@ -52,7 +52,7 @@ bracketsExample a b = (a + b) * (a - b);
 main : Bool;
 main = bracketsExample 1 2 == -3;
 
-;* { Maybe in the future:
+;) Maybe in the future:
 - New operations
 - More types supported
-}
+(;
