@@ -98,17 +98,20 @@ OpLeq.   CmpOp ::= "<=" ;
 
 MatchT.     Match ::= Pattern "->" Expr ;
 
-PatCon.   Pattern ::= Constr ;
+PatCon.   Pattern ::= ConIdent [SubPat] ;
 PatLL.   Pattern1 ::= Pattern2 "::" Pattern1 ;
 PatLst.  Pattern2 ::= "[" [Pattern] "]" ;
 PatLit.  Pattern2 ::= Literal ;
 PatVar.  Pattern2 ::= VarIdent ;
 PatDef.  Pattern2 ::= "_" ;
 
+SubPat.    SubPat ::= Pattern2 ;
+
 coercions Pattern 2;
 
 terminator nonempty Match ";" ;
 separator Pattern "," ;
+separator SubPat "" ;
 
 -- comments ------------------------------------------------
 
