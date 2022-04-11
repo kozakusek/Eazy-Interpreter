@@ -1,3 +1,7 @@
 dev
 release_1
 .vscode
+*.o
+*.hi
+*.info
+/Main
