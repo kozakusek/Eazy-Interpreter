@@ -1,4 +1,6 @@
 module TypeChecker (typeCheck) where
 
-typeCheck :: a -> a
-typeCheck = id
+import Eazy.ErrM ( Err )
+
+typeCheck :: a -> Err a
+typeCheck = Right
