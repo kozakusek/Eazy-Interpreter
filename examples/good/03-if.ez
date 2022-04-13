@@ -24,5 +24,5 @@ isOdd : Integer -> Integer;
 isOdd n = 1 if (n / 2) * 2 =/= n
     otherwise 1337 * 1;
 
-main : Integer;
+main : Bool;
 main = isEven 42 == 1;

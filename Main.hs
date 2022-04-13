@@ -14,20 +14,20 @@ runFile f = readFile f >>= runProgram
 
 runProgram :: String -> IO ()
 runProgram ts = let 
-  result = do
-    parsed      <- pProgram $ myLexer ts
-    typeChecked <- typeCheck $ enrich parsed
-    interpreted <- interpret typeChecked
-    evalMain interpreted
-  in case result of
-    Left err -> do
-      putStrLn err
-      exitFailure
-    Right rt -> print rt
+    result = do
+        parsed      <- pProgram $ myLexer ts
+        typeChecked <- typeCheck $ enrich parsed
+        interpreted <- interpret typeChecked
+        evalMain interpreted
+    in case result of
+        Left err -> do
+            putStrLn err
+            exitFailure
+        Right rt -> print rt
 
 main :: IO ()
 main = do
-  args <- getArgs
-  case args of
-    []         -> getContents >>= runProgram
-    filename   -> mapM_ runFile filename
+    args <- getArgs
+    case args of
+        []       -> getContents >>= runProgram
+        filename -> mapM_ runFile filename
