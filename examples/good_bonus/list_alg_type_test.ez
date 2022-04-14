@@ -1,0 +1,4 @@
+type List a = Empty | Something a (List a);
+
+main : List Integer;
+main = Something 2 (Something 3 (Something 4 Empty));

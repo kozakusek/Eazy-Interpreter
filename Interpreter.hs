@@ -102,10 +102,16 @@ evalExpr (ExpChn _ ex ex') = do
 
 evalExpr (ExpLst _ exs)  = mapM evalExpr exs <&> ListVal
 
-evalExpr (ExpCon ma ci)        = undefined
-evalExpr (ExpMth ma ex mas)    = undefined
-evalExpr (ExpLet ma des ex)    = undefined
-evalExpr (ExpLmb ma ty vis ex) = undefined
+evalExpr (ExpLmb _ _ vis ex) = FunVal vis . Pending ex <$> ask
+
+evalExpr (ExpLet ma decls ex) = do
+    env <- ask
+    let (Right env') = foldM (\e d -> execStateT (translate d) e) env decls
+    local (const env') (evalExpr ex)
+
+evalExpr (ExpCon ma (ConIdent name)) = undefined
+
+evalExpr (ExpMth ma ex mas) = undefined
 
 evalMain :: Env -> Err EazyValue
 evalMain a = case a !? "main" of
@@ -118,7 +124,7 @@ interpret (ProgramT _ decls) = foldM (\env decl -> execStateT (translate decl) e
 
 translate :: Decl -> StateT Env Err ()
 translate d = case d of
-    DeclData _ (SimpleTypeT _ (ConIdent name) args) cons -> modify id
+    DeclData _ (SimpleTypeT _ _ args) cons -> modify id
     DeclFunc _ (VarIdent name) vis expr -> do
         env <- get
         let env' = insert name (
