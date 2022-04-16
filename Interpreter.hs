@@ -20,7 +20,8 @@ data EazyValue =
 
 data Promise =
     Fulfilled EazyValue |
-    Pending Expr Env deriving (Eq, Show)
+    Pending Expr Env |
+    PendingAlg ConIdent Integer [EazyValue] Env deriving (Eq, Show)
 
 posToString :: Maybe (Int, Int) -> String
 posToString Nothing = "Position not avaliable: "
@@ -40,7 +41,7 @@ evalExpr (ExpVar pos (VarIdent var)) = do
     case env !? var  of
         Just (Fulfilled v) -> return v
         Just (Pending e env') -> local (const env') (evalExpr e)
-        Nothing -> fail $ posToString pos ++ "Variable " ++ var ++ " is not defined"
+        _ -> fail $ posToString pos ++ "Variable " ++ var ++ " is not defined"
 
 evalExpr (ExpNeg _ ex) = evalExpr ex >>= (\(IntVal n) -> return $ IntVal $ -n)
 
@@ -88,12 +89,22 @@ evalExpr (ExpIf _ ex1 ex' ex2) = do
     if condition then evalExpr ex1 else evalExpr ex2
 
 evalExpr (ExpApp pos f g) = do
-    FunVal args (Pending expr env') <- evalExpr f
-    env <- ask
-    case args of
-      [VarIdent a] -> local (\v -> insert a (Pending g v) env') (evalExpr expr)
-      (VarIdent a):as -> return $ FunVal as $ Pending expr $ insert a (Pending g env) env'
-      _ -> undefined
+    pending <- evalExpr f
+    case pending of
+        FunVal args (Pending expr env') -> do
+            env <- ask
+            case args of
+                [VarIdent a] -> local (\v -> insert a (Pending g v) env') (evalExpr expr)
+                (VarIdent a):as -> return $ FunVal as $ Pending expr $ insert a (Pending g env) env'
+                _ -> undefined
+        FunVal args (PendingAlg (ConIdent name) n vals env') -> do
+            v <- evalExpr g
+            case n of
+                1 -> return $ AlgVal (ConIdent name) (v:vals)
+                _ -> return $ FunVal args $ PendingAlg (ConIdent name) (n - 1) (v:vals) env'
+        _ -> fail $ posToString pos ++ "Not a function"
+
+
 
 evalExpr (ExpChn _ ex ex') = do
     h <- evalExpr ex
@@ -109,7 +120,11 @@ evalExpr (ExpLet ma decls ex) = do
     let (Right env') = foldM (\e d -> execStateT (translate d) e) env decls
     local (const env') (evalExpr ex)
 
-evalExpr (ExpCon ma (ConIdent name)) = undefined
+evalExpr (ExpCon pos c@(ConIdent name)) = do
+    env <- ask
+    case env !? name of
+        Just alg@(PendingAlg _ n _ _) -> return $ if n == 0 then AlgVal c [] else FunVal [] alg
+        _ -> fail $ posToString pos ++ "Constructor " ++ name ++ " is not defined"
 
 evalExpr (ExpMth ma ex mas) = undefined
 
@@ -117,14 +132,17 @@ evalMain :: Env -> Err EazyValue
 evalMain a = case a !? "main" of
     Just (Fulfilled val) -> return val
     Just (Pending expr env) -> evalExprInEnv expr env
-    Nothing -> return $ IntVal 0
+    _ -> return $ IntVal 0
 
 interpret :: Program -> Err Env
 interpret (ProgramT _ decls) = foldM (\env decl -> execStateT (translate decl) env) empty decls
 
 translate :: Decl -> StateT Env Err ()
 translate d = case d of
-    DeclData _ (SimpleTypeT _ _ args) cons -> modify id
+    DeclData _ (SimpleTypeT _ _ args) cons -> do
+        env <- get
+        let env' = foldr (\(ConstrT _ n@(ConIdent name) lst) a -> insert name (PendingAlg n (toInteger $ length lst) [] env') a) env cons
+        put env'
     DeclFunc _ (VarIdent name) vis expr -> do
         env <- get
         let env' = insert name (

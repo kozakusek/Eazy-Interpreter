@@ -1,0 +1,4 @@
+type Tree a = Leaf a | Node (Tree a) (Tree a);
+
+main : Tree Integer;
+main = Node (Node (Node (Leaf 1) (Leaf 2)) (Leaf 3)) (Leaf 4);

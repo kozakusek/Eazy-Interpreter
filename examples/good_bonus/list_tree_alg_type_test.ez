@@ -1,0 +1,6 @@
+type List a = Empty | Something a (List a);
+
+type Tree a = Leaf a | Node (Tree a) (Tree a);
+
+main : Tree List Integer;
+main = Node (Node (Leaf (Something 7 (Something 5 (Something 3 Empty)))) (Leaf (Something 0 Empty))) (Leaf (Something 2 (Something 3 Empty)));
