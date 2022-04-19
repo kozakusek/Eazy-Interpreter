@@ -47,19 +47,20 @@ import Eazy.Lex
   '['         { PT _ (TS _ 22)      }
   ']'         { PT _ (TS _ 23)      }
   '_'         { PT _ (TS _ 24)      }
-  'if'        { PT _ (TS _ 25)      }
-  'in'        { PT _ (TS _ 26)      }
-  'lambda'    { PT _ (TS _ 27)      }
-  'let'       { PT _ (TS _ 28)      }
-  'match'     { PT _ (TS _ 29)      }
-  'otherwise' { PT _ (TS _ 30)      }
-  'type'      { PT _ (TS _ 31)      }
-  'with'      { PT _ (TS _ 32)      }
-  '{'         { PT _ (TS _ 33)      }
-  '|'         { PT _ (TS _ 34)      }
-  '||'        { PT _ (TS _ 35)      }
-  '}'         { PT _ (TS _ 36)      }
-  '~'         { PT _ (TS _ 37)      }
+  'as'        { PT _ (TS _ 25)      }
+  'if'        { PT _ (TS _ 26)      }
+  'in'        { PT _ (TS _ 27)      }
+  'lambda'    { PT _ (TS _ 28)      }
+  'let'       { PT _ (TS _ 29)      }
+  'match'     { PT _ (TS _ 30)      }
+  'otherwise' { PT _ (TS _ 31)      }
+  'type'      { PT _ (TS _ 32)      }
+  'with'      { PT _ (TS _ 33)      }
+  '{'         { PT _ (TS _ 34)      }
+  '|'         { PT _ (TS _ 35)      }
+  '||'        { PT _ (TS _ 36)      }
+  '}'         { PT _ (TS _ 37)      }
+  '~'         { PT _ (TS _ 38)      }
   L_integ     { PT _ (TI _)         }
   L_VarIdent  { PT _ (T_VarIdent _) }
   L_ConIdent  { PT _ (T_ConIdent _) }
@@ -217,7 +218,12 @@ CmpOp
 
 Match :: { (Eazy.Abs.BNFC'Position, Eazy.Abs.Match) }
 Match
-  : Pattern '->' Expr { (fst $1, Eazy.Abs.MatchT (fst $1) (snd $1) (snd $3)) }
+  : AbsPattern '->' Expr { (fst $1, Eazy.Abs.MatchT (fst $1) (snd $1) (snd $3)) }
+
+AbsPattern :: { (Eazy.Abs.BNFC'Position, Eazy.Abs.AbsPattern) }
+AbsPattern
+  : Pattern 'as' VarIdent { (fst $1, Eazy.Abs.PatAs (fst $1) (snd $1) (snd $3)) }
+  | Pattern { (fst $1, Eazy.Abs.Pat (fst $1) (snd $1)) }
 
 Pattern :: { (Eazy.Abs.BNFC'Position, Eazy.Abs.Pattern) }
 Pattern

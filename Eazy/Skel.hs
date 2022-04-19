@@ -96,7 +96,12 @@ transCmpOp x = case x of
 
 transMatch :: Show a => Eazy.Abs.Match' a -> Result
 transMatch x = case x of
-  Eazy.Abs.MatchT _ pattern_ expr -> failure x
+  Eazy.Abs.MatchT _ abspattern expr -> failure x
+
+transAbsPattern :: Show a => Eazy.Abs.AbsPattern' a -> Result
+transAbsPattern x = case x of
+  Eazy.Abs.PatAs _ pattern_ varident -> failure x
+  Eazy.Abs.Pat _ pattern_ -> failure x
 
 transPattern :: Show a => Eazy.Abs.Pattern' a -> Result
 transPattern x = case x of

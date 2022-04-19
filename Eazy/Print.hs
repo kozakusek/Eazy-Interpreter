@@ -238,7 +238,12 @@ instance Print (Eazy.Abs.CmpOp' a) where
 
 instance Print (Eazy.Abs.Match' a) where
   prt i = \case
-    Eazy.Abs.MatchT _ pattern_ expr -> prPrec i 0 (concatD [prt 0 pattern_, doc (showString "->"), prt 0 expr])
+    Eazy.Abs.MatchT _ abspattern expr -> prPrec i 0 (concatD [prt 0 abspattern, doc (showString "->"), prt 0 expr])
+
+instance Print (Eazy.Abs.AbsPattern' a) where
+  prt i = \case
+    Eazy.Abs.PatAs _ pattern_ varident -> prPrec i 0 (concatD [prt 0 pattern_, doc (showString "as"), prt 0 varident])
+    Eazy.Abs.Pat _ pattern_ -> prPrec i 0 (concatD [prt 0 pattern_])
 
 instance Print (Eazy.Abs.Pattern' a) where
   prt i = \case

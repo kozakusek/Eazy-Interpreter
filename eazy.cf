@@ -96,7 +96,10 @@ OpLeq.   CmpOp ::= "<=" ;
 
 -- patterns ------------------------------------------------
 
-MatchT.     Match ::= Pattern "->" Expr ;
+MatchT.     Match ::= AbsPattern "->" Expr ;
+
+PatAs. AbsPattern ::= Pattern "as" VarIdent ;
+Pat.   AbsPattern ::= Pattern ;
 
 PatCon.   Pattern ::= ConIdent [SubPat] ;
 PatLL.   Pattern1 ::= Pattern2 "::" Pattern1 ;

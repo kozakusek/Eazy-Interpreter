@@ -1,13 +1,14 @@
-module Interpreter (interpret, evalMain ) where
+module Interpreter (interpret, evalMain) where
 
-import Eazy.ErrM ( Err )
+import Eazy.ErrM (Err)
 import Eazy.Abs
 import Control.Monad.Trans.State (execStateT, StateT, get, put, modify)
 import Data.Map.Lazy (empty, Map, insert, (!?) )
-import Control.Monad ( foldM )
+import Control.Monad (foldM)
 import Control.Monad.Trans.Reader (runReaderT, ReaderT, reader, local, ask)
 import Prelude hiding (lookup)
 import Data.Functor ((<&>))
+import Data.List (find)
 
 type Env = Map String Promise
 
@@ -100,11 +101,9 @@ evalExpr (ExpApp pos f g) = do
         FunVal args (PendingAlg (ConIdent name) n vals env') -> do
             v <- evalExpr g
             case n of
-                1 -> return $ AlgVal (ConIdent name) (v:vals)
-                _ -> return $ FunVal args $ PendingAlg (ConIdent name) (n - 1) (v:vals) env'
+                1 -> return $ AlgVal (ConIdent name) (vals ++ [v])
+                _ -> return $ FunVal args $ PendingAlg (ConIdent name) (n - 1) (vals ++ [v]) env'
         _ -> fail $ posToString pos ++ "Not a function"
-
-
 
 evalExpr (ExpChn _ ex ex') = do
     h <- evalExpr ex
@@ -126,13 +125,62 @@ evalExpr (ExpCon pos c@(ConIdent name)) = do
         Just alg@(PendingAlg _ n _ _) -> return $ if n == 0 then AlgVal c [] else FunVal [] alg
         _ -> fail $ posToString pos ++ "Constructor " ++ name ++ " is not defined"
 
-evalExpr (ExpMth ma ex mas) = undefined
+evalExpr (ExpMth ma ex mas) = do
+    seq <- evalExpr ex
+    case find (\(MatchT _ pat expr) -> seq `matches` pat) mas of
+        Just (MatchT _ pat expr) -> local (letify seq pat) (evalExpr expr)
+        _ -> fail $ posToString ma ++ "No matching method found for " ++ show seq
+
+letify :: EazyValue -> AbsPattern' BNFC'Position -> Env -> Env
+letify v p env = case (v, p') of
+    (_, PatDef _) -> env'
+    (_, PatLit _ lit) -> env'
+    (v, PatVar _ (VarIdent name)) -> insert name (Fulfilled v) env'
+    (ListVal (h:t), PatLL _ pat pat') -> 
+        letify (ListVal t) (Pat Nothing pat') $ letify h (Pat Nothing pat) env'
+    (ListVal vs, PatLst _ pats) -> foldr (\(v, p) -> letify v $ Pat Nothing p) env' $ zip vs pats
+    (AlgVal name vs, PatCon _ _ sps) ->
+        foldr (\(v, SubPat _ pat) -> letify v (Pat Nothing pat)) env' $ zip vs sps
+    _ -> env'
+    where
+        (env', p') = case p of
+            PatAs _ pat (VarIdent name) -> (insert name (Fulfilled v) env, pat)
+            Pat _ pat -> (env, pat)
+
+matches :: EazyValue -> AbsPattern' BNFC'Position -> Bool
+matches v p = case p of
+    PatAs _ pat _ -> fst $ v `isLike` (pat, empty)
+    Pat _ pat -> fst $ v `isLike` (pat, empty)
+    where
+        isLike :: EazyValue -> (Pattern' BNFC'Position, Env) -> (Bool, Env)
+        isLike v (pat, env) = case (v, pat) of
+            (_, PatDef _) -> (True, env)
+            (_, PatLit _ lit) -> (case (lit, v) of
+                (LitInt _ n, IntVal n') -> n == n'
+                (LitTrue _, BoolVal True) -> True
+                (LitFalse _, BoolVal False) -> True
+                _ -> False, env)
+            (_, PatVar _ (VarIdent name)) -> case env !? name of
+                Just (Fulfilled v') -> (v == v', env)
+                _ -> (True, insert name (Fulfilled v) env)
+            (ListVal (h:t), PatLL _ patH patT) -> case h `isLike` (patH, env) of
+                (True, env') -> ListVal t `isLike` (patT, env')    where
+                _ -> (False, env)
+            (ListVal vs, PatLst _ ps) -> if length vs == length ps then 
+                foldr (\(a, p) r@(b, e) -> if b then a `isLike` (p, e) else r) 
+                    (True, env) (zip vs ps)
+                else (False, env)
+            (AlgVal name vs, PatCon _ name' sps) -> if name == name' && length vs == length sps then
+                foldr (\(a, SubPat _ p) r@(b, e) -> if b then a `isLike` (p, e) else r) 
+                    (True, env) (zip vs sps)
+                else (False, env)
+            _ -> (False, env)
 
 evalMain :: Env -> Err EazyValue
 evalMain a = case a !? "main" of
     Just (Fulfilled val) -> return val
     Just (Pending expr env) -> evalExprInEnv expr env
-    _ -> return $ IntVal 0
+    _ -> return $ IntVal (-1)
 
 interpret :: Program -> Err Env
 interpret (ProgramT _ decls) = foldM (\env decl -> execStateT (translate decl) env) empty decls
@@ -141,7 +189,8 @@ translate :: Decl -> StateT Env Err ()
 translate d = case d of
     DeclData _ (SimpleTypeT _ _ args) cons -> do
         env <- get
-        let env' = foldr (\(ConstrT _ n@(ConIdent name) lst) a -> insert name (PendingAlg n (toInteger $ length lst) [] env') a) env cons
+        let env' = foldr (\(ConstrT _ n@(ConIdent name) lst) a ->
+                insert name (PendingAlg n (toInteger $ length lst) [] env') a) env cons
         put env'
     DeclFunc _ (VarIdent name) vis expr -> do
         env <- get

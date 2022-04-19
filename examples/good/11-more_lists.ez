@@ -15,4 +15,4 @@ applyFuncList lst x = match lst with {
 };
 
 main : Bool;
-main = applyFuncList funcList 3 == 5;
+main = applyFuncList funcList 3 == 7;

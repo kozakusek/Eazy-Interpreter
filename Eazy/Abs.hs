@@ -85,7 +85,12 @@ data CmpOp' a
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Match = Match' BNFC'Position
-data Match' a = MatchT a (Pattern' a) (Expr' a)
+data Match' a = MatchT a (AbsPattern' a) (Expr' a)
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
+
+type AbsPattern = AbsPattern' BNFC'Position
+data AbsPattern' a
+    = PatAs a (Pattern' a) VarIdent | Pat a (Pattern' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Pattern = Pattern' BNFC'Position
@@ -197,6 +202,11 @@ instance HasPosition CmpOp where
 instance HasPosition Match where
   hasPosition = \case
     MatchT p _ _ -> p
+
+instance HasPosition AbsPattern where
+  hasPosition = \case
+    PatAs p _ _ -> p
+    Pat p _ -> p
 
 instance HasPosition Pattern where
   hasPosition = \case
