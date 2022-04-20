@@ -8,22 +8,24 @@ import TypeChecker (typeCheck)
 import Prologue (enrich)
 import Interpreter (interpret, evalMain)
 import Control.Monad.Trans.State (runStateT)
+import Control.Monad.IO.Class (liftIO)
 
 runFile :: FilePath -> IO ()
 runFile f = readFile f >>= runProgram
 
 runProgram :: String -> IO ()
-runProgram ts = let 
+runProgram ts = let
     result = do
-        parsed      <- pProgram $ myLexer ts
-        typeChecked <- typeCheck $ enrich parsed
-        interpreted <- interpret typeChecked
-        evalMain interpreted
+        parsed <- enrich $ pProgram $ myLexer ts
+        warns <- typeCheck parsed
+        interpreted <- interpret parsed
+        result <- evalMain interpreted
+        return (result, warns)
     in case result of
         Left err -> do
             putStrLn err
             exitFailure
-        Right rt -> print rt
+        Right (rt, msg) -> msg >> print rt
 
 main :: IO ()
 main = do

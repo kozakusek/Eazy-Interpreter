@@ -3,7 +3,7 @@ module Interpreter (interpret, evalMain) where
 import Eazy.ErrM (Err)
 import Eazy.Abs
 import Control.Monad.Trans.State (execStateT, StateT, get, put, modify)
-import Data.Map.Lazy (empty, Map, insert, (!?) )
+import Data.Map.Lazy (empty, Map, insert, (!?))
 import Control.Monad (foldM)
 import Control.Monad.Trans.Reader (runReaderT, ReaderT, reader, local, ask)
 import Prelude hiding (lookup)
