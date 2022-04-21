@@ -140,7 +140,7 @@ letify v p env = case (v, p') of
         letify (ListVal t) (Pat Nothing pat') $ letify h (Pat Nothing pat) env'
     (ListVal vs, PatLst _ pats) -> foldr (\(v, p) -> letify v $ Pat Nothing p) env' $ zip vs pats
     (AlgVal name vs, PatCon _ _ sps) ->
-        foldr (\(v, SubPat _ pat) -> letify v (Pat Nothing pat)) env' $ zip vs sps
+        foldr (\(v, SubPatT _ pat) -> letify v (Pat Nothing pat)) env' $ zip vs sps
     _ -> env'
     where
         (env', p') = case p of
@@ -171,7 +171,7 @@ matches v p = case p of
                     (True, env) (zip vs ps)
                 else (False, env)
             (AlgVal name vs, PatCon _ name' sps) -> if name == name' && length vs == length sps then
-                foldr (\(a, SubPat _ p) r@(b, e) -> if b then a `isLike` (p, e) else r) 
+                foldr (\(a, SubPatT _ p) r@(b, e) -> if b then a `isLike` (p, e) else r) 
                     (True, env) (zip vs sps)
                 else (False, env)
             _ -> (False, env)

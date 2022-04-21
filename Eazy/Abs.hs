@@ -37,7 +37,7 @@ data Constr' a = ConstrT a ConIdent [Type' a]
 type Type = Type' BNFC'Position
 data Type' a
     = TypArr a (Type' a) (Type' a)
-    | TypApp a (Type' a) (Type' a)
+    | TypApp a ConIdent (Type' a) [Type' a]
     | TypVar a VarIdent
     | TypCon a ConIdent
     | TypLst a (Type' a)
@@ -104,7 +104,7 @@ data Pattern' a
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type SubPat = SubPat' BNFC'Position
-data SubPat' a = SubPat a (Pattern' a)
+data SubPat' a = SubPatT a (Pattern' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 newtype VarIdent = VarIdent String
@@ -149,7 +149,7 @@ instance HasPosition Constr where
 instance HasPosition Type where
   hasPosition = \case
     TypArr p _ _ -> p
-    TypApp p _ _ -> p
+    TypApp p _ _ _ -> p
     TypVar p _ -> p
     TypCon p _ -> p
     TypLst p _ -> p
@@ -219,5 +219,5 @@ instance HasPosition Pattern where
 
 instance HasPosition SubPat where
   hasPosition = \case
-    SubPat p _ -> p
+    SubPatT p _ -> p
 

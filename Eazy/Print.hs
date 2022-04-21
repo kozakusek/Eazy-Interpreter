@@ -167,7 +167,7 @@ instance Print (Eazy.Abs.Constr' a) where
 instance Print (Eazy.Abs.Type' a) where
   prt i = \case
     Eazy.Abs.TypArr _ type_1 type_2 -> prPrec i 0 (concatD [prt 1 type_1, doc (showString "->"), prt 0 type_2])
-    Eazy.Abs.TypApp _ type_1 type_2 -> prPrec i 1 (concatD [prt 1 type_1, prt 2 type_2])
+    Eazy.Abs.TypApp _ conident type_ types -> prPrec i 1 (concatD [prt 0 conident, prt 2 type_, prt 2 types])
     Eazy.Abs.TypVar _ varident -> prPrec i 2 (concatD [prt 0 varident])
     Eazy.Abs.TypCon _ conident -> prPrec i 2 (concatD [prt 0 conident])
     Eazy.Abs.TypLst _ type_ -> prPrec i 2 (concatD [doc (showString "["), prt 0 type_, doc (showString "]")])
@@ -256,7 +256,7 @@ instance Print (Eazy.Abs.Pattern' a) where
 
 instance Print (Eazy.Abs.SubPat' a) where
   prt i = \case
-    Eazy.Abs.SubPat _ pattern_ -> prPrec i 0 (concatD [prt 2 pattern_])
+    Eazy.Abs.SubPatT _ pattern_ -> prPrec i 0 (concatD [prt 2 pattern_])
 
 instance Print [Eazy.Abs.Match' a] where
   prt _ [] = concatD []

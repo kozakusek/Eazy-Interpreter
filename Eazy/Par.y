@@ -106,7 +106,7 @@ Type
 
 Type1 :: { (Eazy.Abs.BNFC'Position, Eazy.Abs.Type) }
 Type1
-  : Type1 Type2 { (fst $1, Eazy.Abs.TypApp (fst $1) (snd $1) (snd $2)) }
+  : ConIdent Type2 ListType2 { (fst $1, Eazy.Abs.TypApp (fst $1) (snd $1) (snd $2) (snd $3)) }
   | Type2 { (fst $1, (snd $1)) }
 
 Type2 :: { (Eazy.Abs.BNFC'Position, Eazy.Abs.Type) }
@@ -244,7 +244,7 @@ Pattern2
   | '(' Pattern ')' { (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1), (snd $2)) }
 
 SubPat :: { (Eazy.Abs.BNFC'Position, Eazy.Abs.SubPat) }
-SubPat : Pattern2 { (fst $1, Eazy.Abs.SubPat (fst $1) (snd $1)) }
+SubPat : Pattern2 { (fst $1, Eazy.Abs.SubPatT (fst $1) (snd $1)) }
 
 ListMatch :: { (Eazy.Abs.BNFC'Position, [Eazy.Abs.Match]) }
 ListMatch

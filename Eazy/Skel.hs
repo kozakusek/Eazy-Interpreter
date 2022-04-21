@@ -44,7 +44,7 @@ transConstr x = case x of
 transType :: Show a => Eazy.Abs.Type' a -> Result
 transType x = case x of
   Eazy.Abs.TypArr _ type_1 type_2 -> failure x
-  Eazy.Abs.TypApp _ type_1 type_2 -> failure x
+  Eazy.Abs.TypApp _ conident type_ types -> failure x
   Eazy.Abs.TypVar _ varident -> failure x
   Eazy.Abs.TypCon _ conident -> failure x
   Eazy.Abs.TypLst _ type_ -> failure x
@@ -114,4 +114,4 @@ transPattern x = case x of
 
 transSubPat :: Show a => Eazy.Abs.SubPat' a -> Result
 transSubPat x = case x of
-  Eazy.Abs.SubPat _ pattern_ -> failure x
+  Eazy.Abs.SubPatT _ pattern_ -> failure x

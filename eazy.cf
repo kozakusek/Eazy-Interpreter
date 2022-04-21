@@ -30,7 +30,7 @@ SimpleTypeT. SimpleType ::= ConIdent [VarIdent] ;
 ConstrT. Constr ::= ConIdent [Type2] ;
 
 TypArr.  Type  ::= Type1 "->" Type ;
-TypApp.  Type1 ::= Type1 Type2 ;
+TypApp.  Type1 ::= ConIdent Type2 [Type2] ;
 TypVar.  Type2 ::= VarIdent ;
 TypCon.  Type2 ::= ConIdent ;
 TypLst.  Type2 ::= "[" Type "]" ;
@@ -108,7 +108,7 @@ PatLit.  Pattern2 ::= Literal ;
 PatVar.  Pattern2 ::= VarIdent ;
 PatDef.  Pattern2 ::= "_" ;
 
-SubPat.    SubPat ::= Pattern2 ;
+SubPatT.   SubPat ::= Pattern2 ;
 
 coercions Pattern 2;
 
