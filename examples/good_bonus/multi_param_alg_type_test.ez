@@ -1,0 +1,10 @@
+type Dragon a b c = Egg | Baby a | Adult b a | Dead c a b;
+
+function : Dragon Integer a Bool;
+function = Baby 7;
+
+fun2 : Dragon a b c;
+fun2 = Dead 1 True 2;
+
+main : Dragon Int Int Int;
+main = Dead 1 2 3; 

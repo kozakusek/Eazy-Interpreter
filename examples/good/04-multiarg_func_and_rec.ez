@@ -1,5 +1,5 @@
 add8 : Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer;
-add8 x y z w v u t = x + y + z + w + v + u + t;
+add8 x y z w v u t o = x + y + z + w + v + u + t + o;
 
 fibonacci : Integer -> Integer;
 fibonacci n = n if n < 2 
