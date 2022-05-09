@@ -16,12 +16,22 @@ data EazyValue =
     BoolVal Bool |
     ListVal [EazyValue] |
     AlgVal ConIdent [EazyValue] |
-    FunVal [VarIdent] Promise deriving (Eq, Show)
+    FunVal [VarIdent] Promise deriving (Eq)
+
+instance Show EazyValue where
+    show (IntVal n) = show n
+    show (BoolVal b) = show b
+    show (ListVal evs) = "[" ++ 
+        fst (foldr (\ev (s, b) -> (show ev ++ (if b then "," else "") ++ s, True)) ("]", False) evs)
+    show (AlgVal (ConIdent n) []) = n
+    show (AlgVal (ConIdent n) evs) = n ++ "(" ++
+        fst (foldr (\ev (s, b) -> (show ev ++ (if b then "," else "") ++ s, True)) (")", False) evs)
+    show (FunVal _ _) = "Unfortunately, I can't show functions :("
 
 data Promise =
     Fulfilled EazyValue |
     Pending Expr Env |
-    PendingAlg ConIdent Integer [EazyValue] Env deriving (Eq, Show)
+    PendingAlg ConIdent Integer [EazyValue] Env deriving (Eq)
 
 posToString :: Maybe (Int, Int) -> String
 posToString Nothing = "Position not avaliable: "
@@ -135,7 +145,7 @@ letify v p env = case (v, p') of
     (_, PatDef _) -> env'
     (_, PatLit _ lit) -> env'
     (v, PatVar _ (VarIdent name)) -> insert name (Fulfilled v) env'
-    (ListVal (h:t), PatLL _ pat pat') -> 
+    (ListVal (h:t), PatLL _ pat pat') ->
         letify (ListVal t) (Pat Nothing pat') $ letify h (Pat Nothing pat) env'
     (ListVal vs, PatLst _ pats) -> foldr (\(v, p) -> letify v $ Pat Nothing p) env' $ zip vs pats
     (AlgVal name vs, PatCon _ _ sps) ->
@@ -165,12 +175,12 @@ matches v p = case p of
             (ListVal (h:t), PatLL _ patH patT) -> case h `isLike` (patH, env) of
                 (True, env') -> ListVal t `isLike` (patT, env')    where
                 _ -> (False, env)
-            (ListVal vs, PatLst _ ps) -> if length vs == length ps then 
-                foldr (\(a, p) r@(b, e) -> if b then a `isLike` (p, e) else r) 
+            (ListVal vs, PatLst _ ps) -> if length vs == length ps then
+                foldr (\(a, p) r@(b, e) -> if b then a `isLike` (p, e) else r)
                     (True, env) (zip vs ps)
                 else (False, env)
             (AlgVal name vs, PatCon _ name' sps) -> if name == name' && length vs == length sps then
-                foldr (\(a, SubPatT _ p) r@(b, e) -> if b then a `isLike` (p, e) else r) 
+                foldr (\(a, SubPatT _ p) r@(b, e) -> if b then a `isLike` (p, e) else r)
                     (True, env) (zip vs sps)
                 else (False, env)
             _ -> (False, env)
