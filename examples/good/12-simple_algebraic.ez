@@ -1,23 +1,25 @@
-type Maybe a = Just a | Nothing;
+type MyMaybe a = MyJust a | MyNothing;
 
 type EnumZ4 = Zero | One | Two | Three | Error;
 
-f : EnumZ4 -> Maybe Int;
+f : EnumZ4 -> MyMaybe Integer;
 f enum = match enum with {
-    Zero -> Just 0;
-    One -> Just 1;
-    Two -> Just 2;
-    Three -> Just 3;
-    Error -> Nothing;
+    Zero -> MyJust 0;
+    One -> MyJust 1;
+    Two -> MyJust 2;
+    Three -> MyJust 3;
+    Error -> MyNothing;
 };
 
 main : Bool;
 main = let {
+    a : MyMaybe Integer;
+    b : MyMaybe Integer;
     a = f Zero;
     b = f Error;
 } in match a with {
-    Just x -> match b with {
-        Nothing -> x == 0;
+    MyJust x -> match b with {
+        MyNothing -> x == 0;
         _ -> False;
     };
     _ -> False;

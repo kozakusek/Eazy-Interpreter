@@ -1,0 +1,8 @@
+test : (Integer -> Integer) -> Integer -> Integer;
+test f = f;
+
+add1 : Integer -> Integer;
+add1 x = x + 1;
+
+main : Bool;
+main = test add1 0 == 1;

@@ -4,17 +4,17 @@ hasNth lst n = match lst with {
     x :: xs -> True if n == 0 otherwise hasNth xs (n - 1);
 };
 
-empty: [a] -> Bool;
-empty lst = match lst with {
+myempty: [a] -> Bool;
+myempty lst = match lst with {
     [] -> True;
     x :: xs -> False;
 };
 
-head : [a] -> a;
-head lst = match lst with { x :: xs -> x; };
+myhead : [a] -> a;
+myhead lst = match lst with { x :: xs -> x; };
 
-tail : [a] -> [a];
-tail lst = match lst with { x :: xs -> xs; };
+mytail : [a] -> [a];
+mytail lst = match lst with { x :: xs -> xs; };
 
 oneTwoThree : [Integer];
 oneTwoThree = [1, 2, 3];

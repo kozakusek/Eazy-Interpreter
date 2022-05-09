@@ -1,0 +1,5 @@
+test : Integer -> (Integer -> Integer);
+test x = lambda{Integer -> Integer} y -> x + y;
+
+main : Bool;
+main = (test 1) 0 == 1;

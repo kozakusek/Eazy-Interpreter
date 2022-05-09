@@ -1,6 +1,6 @@
 type Tree a = Leaf a | Node (Tree a) (Tree a);
 
-rightHead : Tree [a] -> a;
+rightHead : Tree [a] -> a; 
 rightHead lst = match lst with {
     Leaf (h::[]) -> h ;
     Leaf (h::t) -> rightHead (Leaf t) ;
@@ -9,9 +9,9 @@ rightHead lst = match lst with {
 
 algebraicNested : Tree [Tree [a]] -> a;
 algebraicNested t = match t with {
-    Leaf [] -> rightHead [];
+    Leaf [] -> rightHead (Leaf []);
     Leaf [Leaf x] -> x;
-    Leaf [Node l r] as d -> algebraicNested [l];
+    Leaf [Node l r] as d -> algebraicNested (Leaf [l]);
     Node l (Leaf []) -> algebraicNested l;
     Node l r as xd -> algebraicNested r;
 };
