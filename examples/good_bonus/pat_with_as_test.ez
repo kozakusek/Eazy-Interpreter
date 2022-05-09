@@ -1,0 +1,9 @@
+test: [Integer] -> Integer;
+test lst = match lst with {
+    [] -> 0;
+    [1,2,3] as t -> foldl (lambda{Integer -> Integer -> Integer} x y -> x + y) 0 t;
+    _ -> -1;
+};
+
+main : Bool;
+main = test [1,2,3] == 6;

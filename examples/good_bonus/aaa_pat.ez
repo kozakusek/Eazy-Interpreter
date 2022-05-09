@@ -1,0 +1,9 @@
+test : [Integer] -> Bool;
+test lst = match lst with {
+    [] -> False;
+    [a, a, a] -> True;
+    h :: t -> False;
+};
+
+main : Bool;
+main = ~ test [1, 2, 3] && test [1, 1, 1];

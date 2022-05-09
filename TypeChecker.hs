@@ -120,14 +120,14 @@ deduceExprType (ExpOr pos expr expr') = deduceOpTypes EazyBool pos [expr, expr']
 
 deduceExprType (ExpAnd pos expr expr') = deduceOpTypes EazyBool pos [expr, expr']
 
-deduceExprType (ExpCmp pos expr cop expr') = (case cop of
-    (OpEq _) -> do
-        exprType <- deduceExprType expr
-        deduceOpTypes exprType pos [expr']
-    (OpNeq _)-> do
-        exprType <- deduceExprType expr
-        deduceOpTypes exprType pos [expr']
-    _ ->  deduceOpTypes EazyInt pos [expr, expr']) >> return EazyBool
+deduceExprType (ExpCmp pos expr cop expr') = do
+    exprType <- deduceExprType expr
+    when (exprType /= EazyInt) $
+        fail $ posToString pos ++ "Expected integer expression, got " ++ show exprType
+    exprType' <- deduceExprType expr'
+    when (exprType' /= EazyInt) $
+        fail $ posToString pos ++ "Expected integer expression, got " ++ show exprType'
+    return EazyBool
 
 deduceExprType (ExpAdd pos expr _ expr') = deduceOpTypes EazyInt pos [expr, expr']
 

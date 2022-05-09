@@ -7,12 +7,6 @@ is42 x = (
     otherwise 0
 );
 
-isNotTrue : Bool -> Bool;
-isNotTrue x = (True
-    if x == False 
-    otherwise False
-);
-
 isEven : Integer -> Integer;
 isEven n = (1
     if (n / 2) * 2 == n

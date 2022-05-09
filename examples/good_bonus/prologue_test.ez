@@ -1,0 +1,20 @@
+getEither : Integer -> Either Bool Integer;
+getEither a = Left True if a == 0 otherwise Right a;
+
+main : Bool;
+main = (
+    (head [1,2,3] == 1) &&
+    (match tail [1,2,3] with {[2,3] -> True; _ -> False;}) &&
+    (match getEither 0 with {Left True -> True; Right _ -> False;}) &&
+    (match getEither 1 with {Left _ -> False; Right 1 -> True;}) &&
+    (foldl (lambda{Integer -> Integer -> Integer} a e -> e) 0 [1,2,3] == 3) &&
+    (foldr (lambda{Integer -> Integer -> Integer} e a -> e) 36 [1,2,6] == 1) &&
+    (null [] && ~ null [1]) &&
+    (last [1,2,3] == 3) &&
+    (or [True, False] && ~ or [False, False]) &&
+    (and [True, True] && ~ and [True, False]) &&
+    (all (lambda{Integer -> Bool} a -> a > 0) [1,2,3]) &&
+    (any (lambda{Integer -> Bool} a -> a > 0) [-1,2,-3]) &&
+    (match map (lambda{Integer -> Integer} a -> a + 1) [1,2,3] with {
+        [2,3,4] -> True; _ -> False; })
+);
