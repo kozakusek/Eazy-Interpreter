@@ -2,7 +2,7 @@ module TypeChecker (typeCheck) where
 
 import Eazy.ErrM (Err)
 import Eazy.Abs
-import Control.Monad (foldM, when, unless, void, replicateM)
+import Control.Monad (foldM, when, unless)
 import Control.Monad.Trans.State (execStateT, get, put, StateT, gets, modify)
 import Data.Map.Lazy (empty, Map, member, insert, (!?), (!), adjust, singleton)
 import Data.List (nub)
@@ -18,11 +18,9 @@ data EazyType =
     EazyCon String [EazyType] |
     EazyFun [EazyType] deriving (Show, Ord)
 
-data PromiseT =
-    Fulfilled EazyType Bool  | XD deriving (Show)
-    --Pending Expr TypeEnv deriving 
+type TypeDef = (EazyType, Bool)
 
-type TypeEnv = (Map String PromiseT, IO())
+type TypeEnv = (Map String TypeDef, IO())
 
 instance Eq EazyType where
     EazyInt == EazyInt = True
@@ -58,7 +56,7 @@ translate decl  = do
     case decl of
         DeclFunT pos (VarIdent name) ty -> do
             env <- wget
-            pTy@(Fulfilled ty' _) <- translateFunT ty
+            pTy@(ty', _) <- translateFunT ty
             wput $ insert name pTy env -- Allowing shadowing
         DeclData pos (SimpleTypeT _ (ConIdent tname) params) cons -> do
             env <- wget
@@ -66,7 +64,7 @@ translate decl  = do
                 fail $ posToString pos ++ "Type " ++ tname ++ " is already defined"
             when (length (nub params) /= length params) $
                 fail $ posToString pos ++ "Conflicting parameter names in type " ++ tname
-            wput $ insert tname (Fulfilled (EazyCon tname (devarify <$> params)) True) env
+            wput $ insert tname (EazyCon tname (devarify <$> params), True) env
             foldM (`translateDataT` (tname,  params)) () cons
         DeclFunc pos (VarIdent name) args expr -> do
             env <- wget
@@ -77,19 +75,14 @@ translate decl  = do
                 fail $ posToString pos ++ "Conflicting arguments in " ++ name
             let tname = env ! name
             expectedExprType <- forseeExprType pos args tname
-            wput $ adjust (\(Fulfilled t False) -> Fulfilled t True) name (
-                foldr (\(VarIdent a, t) -> insert a (Fulfilled t True)) env (zip args (getTlist tname)))
+            wput $ adjust (\(t, _) -> (t, True)) name (
+                foldr (\(VarIdent a, t) -> insert a (t, True)) env (zip args (getTlist tname)))
             exprType <- deduceExprType expr
             when (exprType /= expectedExprType) $
                 fail $ posToString pos ++ "Function " ++ name ++ show args ++ " has wrong type" ++
                     "\n\tExpected: " ++ show expectedExprType ++
                     "\n\tActual: " ++ show exprType
-            wput $ adjust (\(Fulfilled t False) -> Fulfilled t True) name env
-
-getTlist :: PromiseT -> [EazyType]
-getTlist (Fulfilled (EazyFun l) _) = l
-getTlist (Fulfilled other _) = [other]
-getTlist _ = []
+            wput $ adjust (\(t, _) -> (t, True)) name env
 
 deduceExprType :: Expr' BNFC'Position -> StateT TypeEnv Err EazyType
 deduceExprType (ExpLit _ lit) = return $ case lit of
@@ -99,14 +92,14 @@ deduceExprType (ExpLit _ lit) = return $ case lit of
 deduceExprType (ExpVar pos (VarIdent name)) = do
     env <- wget
     case env !? name of
-        Just (Fulfilled t True) -> return t
+        Just (t, True) -> return t
         Nothing -> return EazyNil
         _ -> fail $ posToString pos ++ name ++ " is not defined"
 
 deduceExprType (ExpCon pos (ConIdent name)) = do
     env <- wget
     case env !? name of
-        Just (Fulfilled (EazyFun lst) True) -> case lst of
+        Just (EazyFun lst, True) -> case lst of
             [t] -> return t
             [] -> fail $ posToString pos ++ "Unexpected error - 1"
             _ -> return $ EazyFun lst
@@ -169,7 +162,7 @@ deduceExprType (ExpLet _ decls expr) = do
     return exprType
 
 deduceExprType (ExpLmb pos ty vis expr) = do
-    pt@(Fulfilled lambdaType _) <- translateFunT ty
+    pt@(lambdaType, _) <- translateFunT ty
     expectedExprType <- forseeExprType pos vis pt
     exprType <- deduceExprType expr
     when (exprType /= expectedExprType) $
@@ -211,7 +204,7 @@ deduceExprType (ExpMth _ expr matchings) = do
         env <- wget
         case apat of
             PatAs _ pat (VarIdent v) -> do
-                wput $ insert v (Fulfilled exprType True) env
+                wput $ insert v (exprType, True) env
                 enrichEnvWithPat pat exprType
             Pat _ pat -> enrichEnvWithPat pat exprType
         resExprType <- deduceExprType e
@@ -232,12 +225,11 @@ subtypeWith _ res = res
 enrichEnvWithPat :: Pattern' BNFC'Position -> EazyType -> StateT TypeEnv Err ()
 enrichEnvWithPat (PatCon _ (ConIdent name) sps) (EazyCon con ts) = do
     env <- wget
-    let Fulfilled (EazyFun args') _ = env ! name
-    let Fulfilled (EazyCon _ names') _ = env ! con
+    let (EazyFun args', _) = env ! name
+    let (EazyCon _ names', _) = env ! con
     let names = map (\(EazyVar v) -> v) names'
     let m = foldl (\m (n, t) -> insert n t m) empty (zip names ts)
     let args = map (subtypeWith m) args'
-    -- Leaf a -> Leaf [Interger]
     mapM_ (\(t, SubPatT _ p) -> enrichEnvWithPat p t) (zip args sps)
 enrichEnvWithPat (PatLL _ pat pat') (EazyList t) =
     enrichEnvWithPat pat t >> enrichEnvWithPat pat' (EazyList t)
@@ -245,7 +237,7 @@ enrichEnvWithPat (PatLst _ pats) (EazyList t) = mapM_ (`enrichEnvWithPat` t) pat
 enrichEnvWithPat (PatLit _ _) t = return ()
 enrichEnvWithPat (PatVar _ (VarIdent  v)) t = do
     env <- wget
-    wput $ insert v (Fulfilled t True) env
+    wput $ insert v (t, True) env
 enrichEnvWithPat (PatDef _) t = return ()
 enrichEnvWithPat p t = fail $ "Unexpected pattern: " ++ show p ++ " with type " ++ show t
 
@@ -255,7 +247,7 @@ deducePatternType pat =
         aux (PatCon pos (ConIdent name) sps) = do
             env <- wget
             case env !? name of
-                Just (Fulfilled (EazyFun lst) _) -> do
+                Just (EazyFun lst, _) -> do
                     when (length sps + 1 /= length lst) $
                         fail $ posToString pos ++ "Wrong number of arguments."
                     types <- mapM (\(SubPatT _ pat, et) -> do
@@ -332,20 +324,19 @@ deduceOpTypes exType pos exprs = do
         ) exprs
     return exType
 
-forseeExprType :: BNFC'Position -> [VarIdent] -> PromiseT -> StateT TypeEnv Err EazyType
+forseeExprType :: BNFC'Position -> [VarIdent] -> TypeDef -> StateT TypeEnv Err EazyType
 forseeExprType pos args promT = do
     case promT of
-        Fulfilled (EazyFun l) _ -> do
+        (EazyFun l, _) -> do
             x <- foldM (\a e -> e a) l (replicate (length args) (tail' pos))
             case x of
                 [a] -> return a
                 [] -> fail $ posToString pos ++ "Unexpected error - 4"
                 _ -> return $ EazyFun x
-        Fulfilled other _ ->
+        (other, _) ->
             if null args
                 then return other
                 else fail $ posToString pos ++ "Wrong number of arguments"
-        _ -> fail $ posToString pos ++ "Unrecognised error"
 
 translateDataT :: () -> (String, [VarIdent]) -> Constr' BNFC'Position -> StateT TypeEnv Err ()
 translateDataT _ (tname, args) (ConstrT pos (ConIdent fname) types) = do
@@ -355,10 +346,10 @@ translateDataT _ (tname, args) (ConstrT pos (ConIdent fname) types) = do
     types <- mapM translateFunT types
 
     let varSet = Set.fromList $ map (\(VarIdent n) -> n) args
-    mapM_ (\(Fulfilled a _) -> errorIfNewVars pos varSet a) types
+    mapM_ (\(a, _) -> errorIfNewVars pos varSet a) types
 
-    let fun = EazyFun ((depromise <$> types) ++ [EazyCon tname (devarify <$> args )])
-    wput $ insert fname (Fulfilled fun True) env
+    let fun = EazyFun ((fst <$> types) ++ [EazyCon tname (devarify <$> args )])
+    wput $ insert fname (fun, True) env
 
 errorIfNewVars :: BNFC'Position -> Set.Set String -> EazyType -> StateT TypeEnv Err ()
 errorIfNewVars pos set t = case t of
@@ -369,44 +360,39 @@ errorIfNewVars pos set t = case t of
     EazyFun nts -> mapM_ (errorIfNewVars pos set) nts
     _ -> return ()
 
-depromise :: PromiseT -> EazyType
-depromise (Fulfilled ty _) = ty
---depromise (Pending _ ty) = EazyNil
-depromise XD = EazyNil
-
 devarify :: VarIdent -> EazyType
 devarify (VarIdent n) = EazyVar n
 
-translateFunT :: Type' BNFC'Position -> StateT TypeEnv Err PromiseT
+translateFunT :: Type' BNFC'Position -> StateT TypeEnv Err TypeDef
 translateFunT ty = case ty of
-    TypCon _ (ConIdent "Integer") -> return $ Fulfilled EazyInt False
-    TypCon _ (ConIdent "Bool")    -> return $ Fulfilled EazyBool False
+    TypCon _ (ConIdent "Integer") -> return (EazyInt, False)
+    TypCon _ (ConIdent "Bool")    -> return (EazyBool, False)
     TypArr _ ty1 ty2 -> do
-        Fulfilled ty1' _ <- translateFunT ty1
-        Fulfilled ty2' _ <- translateFunT ty2
+        (ty1', _) <- translateFunT ty1
+        (ty2', _) <- translateFunT ty2
         let newTy = case ty2' of
                 EazyFun x -> EazyFun (ty1':x)
                 _ -> EazyFun [ty1', ty2']
-        return $ Fulfilled newTy False
+        return (newTy, False)
     TypApp pos (ConIdent name) ty1 tys -> do -- data types
         env <- wget
         case env !? name of
-            Just (Fulfilled (EazyCon _ params) _) -> do
+            Just (EazyCon _ params, _) -> do
                 when (1 + length tys /= length params) $
                     fail $ posToString pos ++ "Wrong number of arguments in " ++ name
             _ -> fail $ posToString pos ++ "Type " ++ name ++ " is not defined"
-        Fulfilled ty1' _ <- translateFunT ty1
-        tys' <- mapM (\x -> do Fulfilled t _ <- translateFunT x; return t) tys
-        return $ Fulfilled (EazyCon name $ ty1':tys') False
-    TypVar _ (VarIdent name) -> return $ Fulfilled (EazyVar name) False
+        (ty1', _) <- translateFunT ty1
+        tys' <- mapM (\x -> do (t, _ ) <- translateFunT x; return t) tys
+        return (EazyCon name $ ty1':tys', False)
+    TypVar _ (VarIdent name) -> return (EazyVar name, False)
     TypCon pos (ConIdent name) -> do -- data types
         env <- wget
         case env !? name of
-            Just (Fulfilled ty@(EazyCon _ []) _) -> return $ Fulfilled ty False
+            Just (ty@(EazyCon _ []), _) -> return (ty, False)
             _ -> fail $ posToString pos ++ "Type " ++ name ++ " is not defined"
     TypLst _ ty1 -> do
-        Fulfilled ty1' _ <- translateFunT ty1
-        return $ Fulfilled (EazyList ty1') False
+        (ty1', _) <- translateFunT ty1
+        return (EazyList ty1', False)
 
 fstM :: Monad m => m (b1, b2) -> m b1
 fstM m = do
@@ -425,3 +411,7 @@ posToString (Just (l, c)) = ":" ++ show l ++ ":" ++ show c ++ ": "
 tail' :: BNFC'Position -> [EazyType] -> StateT TypeEnv Err [EazyType]
 tail' pos [] = fail $ posToString pos ++ "Wrong number of argmuents"
 tail' pos (a:as) = return as
+
+getTlist :: TypeDef -> [EazyType]
+getTlist (EazyFun l, _) = l
+getTlist (other, _) = [other]

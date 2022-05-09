@@ -6,7 +6,6 @@ import Control.Monad.Trans.State (execStateT, StateT, get, put, modify)
 import Data.Map.Lazy (empty, Map, insert, (!?))
 import Control.Monad (foldM)
 import Control.Monad.Trans.Reader (runReaderT, ReaderT, reader, local, ask)
-import Prelude hiding (lookup)
 import Data.Functor ((<&>))
 import Data.List (find)
 
@@ -17,7 +16,7 @@ data EazyValue =
     BoolVal Bool |
     ListVal [EazyValue] |
     AlgVal ConIdent [EazyValue] |
-    FunVal [VarIdent] Promise deriving (Eq, Show) -- Ugly, but it works
+    FunVal [VarIdent] Promise deriving (Eq, Show)
 
 data Promise =
     Fulfilled EazyValue |

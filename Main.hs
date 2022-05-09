@@ -1,8 +1,8 @@
 import System.Environment (getArgs)
-import System.Exit        (exitFailure)
+import System.Exit (exitFailure)
 
-import Eazy.Lex   (Token, mkPosToken)
-import Eazy.Par   (pProgram, myLexer)
+import Eazy.Lex (Token, mkPosToken)
+import Eazy.Par (pProgram, myLexer)
 import Eazy.Print (Print, printTree)
 import TypeChecker (typeCheck)
 import Prologue (enrich)
@@ -16,9 +16,10 @@ runFile f = readFile f >>= runProgram
 runProgram :: String -> IO ()
 runProgram ts = let
     result = do
-        parsed <- enrich $ pProgram $ myLexer ts
-        warns <- typeCheck parsed
-        interpreted <- interpret parsed
+        parsed <- pProgram $ myLexer ts
+        enriched <- enrich parsed
+        warns <- typeCheck enriched
+        interpreted <- interpret enriched
         result <- evalMain interpreted
         return (result, warns)
     in case result of
