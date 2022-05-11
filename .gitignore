@@ -4,4 +4,4 @@ release_1
 *.o
 *.hi
 *.info
-/Main
+/interpreter

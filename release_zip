@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+mkdir bartlomiej_kozaryna
+
+cp eazy.cf bartlomiej_kozaryna/
+cp *.hs bartlomiej_kozaryna/
+cp Makefile bartlomiej_kozaryna/
+cp -r examples bartlomiej_kozaryna/examples
+cp README.md bartlomiej_kozaryna
+
+zip bartlomiej_kozaryna.zip bartlomiej_kozaryna
+
+rm -rf bartlomiej_kozaryna
