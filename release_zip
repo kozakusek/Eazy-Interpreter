@@ -8,6 +8,6 @@ cp Makefile bartlomiej_kozaryna/
 cp -r examples bartlomiej_kozaryna/examples
 cp README.md bartlomiej_kozaryna
 
-zip bartlomiej_kozaryna.zip bartlomiej_kozaryna
+zip -r bartlomiej_kozaryna.zip bartlomiej_kozaryna
 
 rm -rf bartlomiej_kozaryna

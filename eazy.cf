@@ -61,6 +61,8 @@ ExpAnd. Expr1 ::= Expr2 "&&" Expr1 ;
 
 ExpCmp. Expr2 ::= Expr2 CmpOp Expr3 ;
 
+ExpEqs. Expr2 ::= Expr2 EqsOp Expr3 ;
+
 ExpAdd. Expr3 ::= Expr3 AddOp Expr4 ;
 
 ExpMul. Expr4 ::= Expr4 MulOp Expr5 ;
@@ -87,8 +89,8 @@ OpAdd.   AddOp ::= "+" ;
 OpSub.   AddOp ::= "-" ;
 OpMul.   MulOp ::= "*" ;
 OpDiv.   MulOp ::= "/" ;
-OpEq.    CmpOp ::= "==" ;
-OpNeq.   CmpOp ::= "=/=" ;
+OpEq.    EqsOp ::= "==" ;
+OpNeq.   EqsOp ::= "=/=" ;
 OpGrt.   CmpOp ::= ">" ;
 OpGeq.   CmpOp ::= ">=" ;
 OpLrt.   CmpOp ::= "<" ;

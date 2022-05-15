@@ -82,13 +82,19 @@ evalExpr (ExpAnd ma ex ex') = do
     BoolVal b' <- evalExpr ex'
     return $ BoolVal $ b && b'
 
+evalExpr (ExpEqs ma ex co ex') = do
+    n <- evalExpr ex
+    n' <- evalExpr ex'
+    return $ BoolVal $ f co n n' -- TODO: check if for all otptions it works
+    where
+        f (OpEq _)  = (==)
+        f (OpNeq _) = (/=)
+
 evalExpr (ExpCmp ma ex co ex') = do
     IntVal n <- evalExpr ex
     IntVal n' <- evalExpr ex'
     return $ BoolVal $ f co n n'
     where
-        f (OpEq _)  = (==)
-        f (OpNeq _) = (/=)
         f (OpLrt _) = (<)
         f (OpGrt _) = (>)
         f (OpLeq _) = (<=)
