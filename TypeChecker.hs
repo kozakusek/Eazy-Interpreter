@@ -141,16 +141,16 @@ translate isTop (DeclFunc pos (VarIdent name) args expr) = do
     funType <- mapExpr (EazyFun ts)
     -- if defined and not equal then error else add type to env
     case env !? name of
-        Nothing -> putE $ adjust (const (funType, True)) name env
+        Nothing -> putE $ insert name (funType, True) env
         Just (et, False) -> do
             ok <- unify funType et
             when (isNothing ok) $ fail $ posToString pos ++
                 "Type mismatch in " ++ name ++ ": " ++ show et ++ " != " ++ show funType
             putE $ adjust (const (fromJust ok, True)) name env
         Just (et, True) -> fail $ posToString pos ++ "Function " ++ name ++ " is already defined"
-
+    
     -- if top_translate then reset Types and mappings else do nothing
-    unless isTop resetT
+    when isTop resetT
 
 mapExpr :: EazyType -> EnvM EazyType
 mapExpr et = case et of
@@ -350,9 +350,9 @@ deduceExprType (ExpMth _ expr matchings) = do
             Pat _ pat -> enrichEnvWithPat pat exprType
 
         resExprType <- deduceExprType e
+
         -- Unify types
         ok <- unify resExprType t
-
         when (isNothing ok) $
             fail $ posToString p ++ "Conflicting expression types in match. Expected " ++
                 show t ++ ", got " ++ show resExprType
@@ -379,11 +379,11 @@ replaceFV = let
     in fstM . aux empty
 
 unify :: EazyType -> EazyType -> EnvM (Maybe EazyType)
-unify (EazyVar a) b = getM a >>= \case
-    Nothing -> if hasType (EazyVar a) b then return Nothing else updateM a b >> return (Just b)
+unify x@(EazyVar a) b = getM a >>= \case
+    Nothing -> if b /= x && hasType x b then return Nothing else updateM a b >> return (Just b)
     Just et -> unify et b
 unify t (EazyVar b) = unify (EazyVar b) t
-unify (EazyList a) (EazyList b) = unify a b
+unify (EazyList a) (EazyList b) = unify a b <&> (\case {Just t -> Just $ EazyList t; _ -> Nothing})
 unify (EazyCon a as) (EazyCon b bs) = if a /= b then return Nothing else
     zipWithM unify as bs <&> (\l -> if any isNothing l then Nothing else Just $ EazyCon a $ catMaybes l)
 unify (EazyFun a') (EazyFun b') = let a = cutTails a'; b = cutTails b'; diff = length a - length b
@@ -434,10 +434,26 @@ subtypeWith repl (EazyFun nts) = EazyFun $ map (subtypeWith repl) nts
 subtypeWith _ res = res
 
 enrichEnvWithPat :: Pattern' BNFC'Position -> EazyType -> EnvM ()
-enrichEnvWithPat t (EazyVar v) = undefined -- TODO: define
+enrichEnvWithPat (PatDef _) t = return ()
+enrichEnvWithPat (PatLit _ _) t = return ()
 enrichEnvWithPat (PatVar _ (VarIdent  v)) t = do
     env <- getE
     putE $ insert v (t, True) env
+enrichEnvWithPat p (EazyVar v) = case p of
+    PatCon _ (ConIdent n) sps -> do
+        nts' <- getNT (length sps)
+        let nts = map EazyVar nts'
+        updateM v (EazyCon n nts)
+        enrichEnvWithPat p (EazyCon n nts)
+    PatLit _ lit -> return ()
+    PatVar _ vi -> return ()
+    PatDef _ -> return ()
+    _ -> do -- Lists
+        nt <- getT <&> EazyVar
+        updateM v (EazyList nt)
+        env <- getE
+        --when (p == PatLL (Just (10,5)) (PatVar (Just (10,5)) (VarIdent "x")) (PatVar (Just (10,10)) (VarIdent "xs"))) $ fail $ "Not implemented: " ++ show env
+        enrichEnvWithPat p (EazyList nt)
 enrichEnvWithPat (PatCon _ (ConIdent name) sps) (EazyCon con ts) = do
     env <- getE
     let (EazyFun args', _) = env ! name -- e.g. Leaf a -> Tree a
@@ -449,8 +465,6 @@ enrichEnvWithPat (PatCon _ (ConIdent name) sps) (EazyCon con ts) = do
 enrichEnvWithPat (PatLL _ pat pat') (EazyList t) =
     enrichEnvWithPat pat t >> enrichEnvWithPat pat' (EazyList t)
 enrichEnvWithPat (PatLst _ pats) (EazyList t) = mapM_ (`enrichEnvWithPat` t) pats
-enrichEnvWithPat (PatLit _ _) t = return ()
-enrichEnvWithPat (PatDef _) t = return ()
 enrichEnvWithPat p t = fail $ "Unexpected pattern: " ++ show p ++ " with type " ++ show t
 
 deducePatternType :: AbsPattern' BNFC'Position -> EnvM EazyType
