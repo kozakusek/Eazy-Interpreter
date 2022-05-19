@@ -1,5 +1,0 @@
-f : Integer -> Integer;
-f x = (lambda{MyType -> Integer} t -> 2)  x;
-
-main : Integer;
-main = f 1;

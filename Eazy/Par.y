@@ -50,7 +50,7 @@ import Eazy.Lex
   'as'        { PT _ (TS _ 25)      }
   'if'        { PT _ (TS _ 26)      }
   'in'        { PT _ (TS _ 27)      }
-  'lambda'    { PT _ (TS _ 28)      }
+  'lambda:'   { PT _ (TS _ 28)      }
   'let'       { PT _ (TS _ 29)      }
   'match'     { PT _ (TS _ 30)      }
   'otherwise' { PT _ (TS _ 31)      }
@@ -143,7 +143,7 @@ Expr
   : Expr3 'if' Expr 'otherwise' Expr { (fst $1, Eazy.Abs.ExpIf (fst $1) (snd $1) (snd $3) (snd $5)) }
   | 'match' Expr 'with' '{' ListMatch '}' { (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1), Eazy.Abs.ExpMth (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1)) (snd $2) (snd $5)) }
   | 'let' '{' ListDecl '}' 'in' Expr { (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1), Eazy.Abs.ExpLet (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $6)) }
-  | 'lambda' '{' Type '}' ListVarIdent '->' Expr { (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1), Eazy.Abs.ExpLmb (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $5) (snd $7)) }
+  | 'lambda:' ListVarIdent '->' Expr { (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1), Eazy.Abs.ExpLmb (uncurry Eazy.Abs.BNFC'Position (tokenLineCol $1)) (snd $2) (snd $4)) }
   | Expr1 '||' Expr { (fst $1, Eazy.Abs.ExpOr (fst $1) (snd $1) (snd $3)) }
   | Expr1 { (fst $1, (snd $1)) }
 

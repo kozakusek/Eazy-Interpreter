@@ -2,7 +2,6 @@ type MyMaybe a = MyJust a | MyNothing;
 
 type EnumZ4 = Zero | One | Two | Three | Error;
 
-f : EnumZ4 -> MyMaybe Integer;
 f enum = match enum with {
     Zero -> MyJust 0;
     One -> MyJust 1;
@@ -11,7 +10,6 @@ f enum = match enum with {
     Error -> MyNothing;
 };
 
-main : Bool;
 main = let {
     a = f Zero;
     b = f Error;

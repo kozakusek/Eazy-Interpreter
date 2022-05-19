@@ -1,0 +1,3 @@
+f x = let { y = 2 } in x + y + z;
+
+main = f -1;

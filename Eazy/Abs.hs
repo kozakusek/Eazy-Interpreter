@@ -55,7 +55,7 @@ data Expr' a
     = ExpIf a (Expr' a) (Expr' a) (Expr' a)
     | ExpMth a (Expr' a) [Match' a]
     | ExpLet a [Decl' a] (Expr' a)
-    | ExpLmb a (Type' a) [VarIdent] (Expr' a)
+    | ExpLmb a [VarIdent] (Expr' a)
     | ExpOr a (Expr' a) (Expr' a)
     | ExpAnd a (Expr' a) (Expr' a)
     | ExpCmp a (Expr' a) (CmpOp' a) (Expr' a)
@@ -169,7 +169,7 @@ instance HasPosition Expr where
     ExpIf p _ _ _ -> p
     ExpMth p _ _ -> p
     ExpLet p _ _ -> p
-    ExpLmb p _ _ _ -> p
+    ExpLmb p _ _ -> p
     ExpOr p _ _ -> p
     ExpAnd p _ _ -> p
     ExpCmp p _ _ _ -> p

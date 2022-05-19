@@ -28,7 +28,7 @@ $u = [. \n]          -- universal: any character
 
 -- Symbols and non-identifier-like reserved words
 
-@rsyms = \- \> | \[ | \] | \( | \) | \| | \= | \: | \; | \{ | \} | \| \| | \& \& | \: \: | \~ | \- | \, | \+ | \* | \/ | \= \= | \= \/ \= | \> | \> \= | \< | \< \= | \_
+@rsyms = \- \> | \[ | \] | \( | \) | \| | \= | \: | \; | \{ | \} | "lambda" \: | \| \| | \& \& | \: \: | \~ | \- | \, | \+ | \* | \/ | \= \= | \= \/ \= | \> | \> \= | \< | \< \= | \_
 
 :-
 
@@ -177,7 +177,7 @@ resWords =
     (b "match" 30
        (b "as" 25
           (b "]" 23 (b "[" 22 (b "True" 21 N N) N) (b "_" 24 N N))
-          (b "lambda" 28 (b "in" 27 (b "if" 26 N N) N) (b "let" 29 N N)))
+          (b "lambda:" 28 (b "in" 27 (b "if" 26 N N) N) (b "let" 29 N N)))
        (b "|" 35
           (b "with" 33 (b "type" 32 (b "otherwise" 31 N N) N) (b "{" 34 N N))
           (b "}" 37 (b "||" 36 N N) (b "~" 38 N N))))

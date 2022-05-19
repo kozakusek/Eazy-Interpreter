@@ -1,0 +1,9 @@
+add8 x y z w v u t o = x + y + z + w + v + u + t + o;
+
+fibonacci n = n if n < 2 
+    otherwise fibonacci (n - 1) + fibonacci (n - 2);
+
+factorial n = n if n < 2 
+    otherwise n * factorial (n - 1);
+
+main = factorial 7 == 5040;

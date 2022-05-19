@@ -1,0 +1,35 @@
+addition a b = a + b;
+
+subtraction a b = a - b;
+
+multiplication a b = a * b;
+
+division a b = a / b;
+
+isEqual a b = a == b;
+
+isNotEqual a b = a =/= b;
+
+isGreater a b = a > b;
+
+isLess a b = a < b;
+
+isLessOrEqual a b = a <= b;
+
+isGreaterOrEqual a b = a >= b;
+
+not a = ~ a;
+
+land a b = a && b;
+
+lor a b = a || b;
+
+negate a = - a;
+
+complexArithmeticAndComparison1 a b = a + b * 2 == a * b + 2;
+
+complexArithmeticAndComparison2 a b = ~ (a + b * -2 >= a * b + -2);
+
+bracketsExample a b = (a + b) * (a - b);
+
+main = bracketsExample 1 2 == -3;

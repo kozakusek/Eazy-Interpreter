@@ -21,7 +21,7 @@ data EazyValue =
 instance Show EazyValue where
     show (IntVal n) = show n
     show (BoolVal b) = show b
-    show (ListVal evs) = "[" ++ 
+    show (ListVal evs) = "[" ++
         fst (foldr (\ev (s, b) -> (show ev ++ (if b then "," else "") ++ s, True)) ("]", False) evs)
     show (AlgVal (ConIdent n) []) = n
     show (AlgVal (ConIdent n) evs) = n ++ "(" ++
@@ -127,7 +127,7 @@ evalExpr (ExpChn _ ex ex') = do
 
 evalExpr (ExpLst _ exs)  = mapM evalExpr exs <&> ListVal
 
-evalExpr (ExpLmb _ _ vis ex) = FunVal vis . Pending ex <$> ask
+evalExpr (ExpLmb _ vis ex) = FunVal vis . Pending ex <$> ask
 
 evalExpr (ExpLet ma decls ex) = do
     env <- ask

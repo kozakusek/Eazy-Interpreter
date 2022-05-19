@@ -197,7 +197,7 @@ instance Print (Eazy.Abs.Expr' a) where
     Eazy.Abs.ExpIf _ expr1 expr2 expr3 -> prPrec i 0 (concatD [prt 3 expr1, doc (showString "if"), prt 0 expr2, doc (showString "otherwise"), prt 0 expr3])
     Eazy.Abs.ExpMth _ expr matchs -> prPrec i 0 (concatD [doc (showString "match"), prt 0 expr, doc (showString "with"), doc (showString "{"), prt 0 matchs, doc (showString "}")])
     Eazy.Abs.ExpLet _ decls expr -> prPrec i 0 (concatD [doc (showString "let"), doc (showString "{"), prt 0 decls, doc (showString "}"), doc (showString "in"), prt 0 expr])
-    Eazy.Abs.ExpLmb _ type_ varidents expr -> prPrec i 0 (concatD [doc (showString "lambda"), doc (showString "{"), prt 0 type_, doc (showString "}"), prt 0 varidents, doc (showString "->"), prt 0 expr])
+    Eazy.Abs.ExpLmb _ varidents expr -> prPrec i 0 (concatD [doc (showString "lambda:"), prt 0 varidents, doc (showString "->"), prt 0 expr])
     Eazy.Abs.ExpOr _ expr1 expr2 -> prPrec i 0 (concatD [prt 1 expr1, doc (showString "||"), prt 0 expr2])
     Eazy.Abs.ExpAnd _ expr1 expr2 -> prPrec i 1 (concatD [prt 2 expr1, doc (showString "&&"), prt 1 expr2])
     Eazy.Abs.ExpCmp _ expr1 cmpop expr2 -> prPrec i 2 (concatD [prt 2 expr1, prt 0 cmpop, prt 3 expr2])

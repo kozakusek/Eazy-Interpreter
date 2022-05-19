@@ -60,7 +60,7 @@ transExpr x = case x of
   Eazy.Abs.ExpIf _ expr1 expr2 expr3 -> failure x
   Eazy.Abs.ExpMth _ expr matchs -> failure x
   Eazy.Abs.ExpLet _ decls expr -> failure x
-  Eazy.Abs.ExpLmb _ type_ varidents expr -> failure x
+  Eazy.Abs.ExpLmb _ varidents expr -> failure x
   Eazy.Abs.ExpOr _ expr1 expr2 -> failure x
   Eazy.Abs.ExpAnd _ expr1 expr2 -> failure x
   Eazy.Abs.ExpCmp _ expr1 cmpop expr2 -> failure x

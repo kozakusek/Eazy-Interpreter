@@ -1,0 +1,17 @@
+hasNth lst n = match lst with {
+    [] -> False;
+    x :: xs -> True if n == 0 otherwise hasNth xs (n - 1);
+};
+
+myempty lst = match lst with {
+    [] -> True;
+    x :: xs -> False;
+};
+
+myhead lst = match lst with { x :: xs -> x; };
+
+mytail lst = match lst with { x :: xs -> xs; };
+
+oneTwoThree = [1, 2, 3];
+
+main = hasNth oneTwoThree 2 && ~(hasNth oneTwoThree 4); 

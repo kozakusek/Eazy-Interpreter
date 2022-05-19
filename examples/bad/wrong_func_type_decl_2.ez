@@ -1,5 +1,5 @@
 f : Integer -> Bool -> Integer;
-f x = lambda{Integer -> Bool} y -> x =/= y;
+f x = lambda: y -> x =/= y;
 
 main : Integer;
 main = f 0 True;

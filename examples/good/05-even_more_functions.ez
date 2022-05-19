@@ -1,14 +1,14 @@
 typicalLambda : Integer -> Integer -> Integer;
-typicalLambda x = lambda{Integer -> Integer} y -> x + y;
+typicalLambda x = lambda: y -> x + y;
 
 massacreAnIntegerFunction: (Integer -> Integer) -> (Integer -> Integer);
-massacreAnIntegerFunction f = lambda{Integer -> Integer} x -> f (f x);
+massacreAnIntegerFunction f = lambda: x -> f (f x);
 
 suprisingPartialApplication : (Integer -> Integer -> Integer) -> Integer -> Integer -> Integer;
 suprisingPartialApplication f x = f (x + 1); 
 
 main : Bool;
-main = (suprisingPartialApplication (lambda{Integer -> Integer -> Integer} x y -> x * y)) 2 3 == 9;
+main = (suprisingPartialApplication (lambda: x y -> x * y)) 2 3 == 9;
 
 ;) Maybe in the future
  - haskell-like operators (.) & ($)

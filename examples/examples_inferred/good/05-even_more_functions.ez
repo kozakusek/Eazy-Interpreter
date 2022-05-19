@@ -1,0 +1,8 @@
+typicalLambda x = lambda: y -> x + y;
+
+massacreAnIntegerFunction f = lambda: x -> f (f x);
+
+suprisingPartialApplication f x = f (x + 1); 
+
+main = (suprisingPartialApplication (lambda: x y -> x * y)) 2 3 == 9;
+

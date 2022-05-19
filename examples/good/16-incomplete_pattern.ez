@@ -1,0 +1,73 @@
+list_ok_1 a = match a with {
+    [] -> True;
+    a :: b :: c -> False;
+    a :: b -> False;
+};
+
+list_ok_2 a = match a with {
+    [] -> True;
+    a -> False;
+};
+
+list_ok_3 a = match a with {
+    h::t -> True;
+    a -> False;
+};
+
+list_ok_4 a = match a with {
+    [a, b, c] -> True;
+    _ -> False;
+};
+
+list_warn_1 a = match a with {
+    [] -> True;
+    a :: b :: c -> False;
+};
+
+list_warn_2 a = match a with {
+    h::t-> True;
+    a :: b :: c -> False;
+};
+
+list_warn_3 a = match a with {
+    [1]-> True;
+    [1,2,3] -> False;
+};
+
+bool_ok b = match b with {
+    True -> True;
+    False -> False;
+};
+
+bool_warn b = match b with {
+    True -> True;
+};
+
+type Tree a = Leaf a | Node (Tree a) (Tree a);
+
+tree_flat_ok t = match t with {
+    Leaf a -> [a];
+    Node l r -> tree_flat_ok r;
+};
+
+tree_deep_ok t = match t with {
+    Leaf (Leaf 1) -> 1;
+    Leaf (Leaf 3) -> 3;
+    Node (Leaf a) r -> tree_deep_ok r;
+    Leaf (Leaf _) -> 0;
+    Node _ (Node _ _) -> -1;
+    Leaf (Node l r) -> tree_deep_ok l;
+    Node l (Leaf a) -> tree_deep_ok l;
+};
+
+tree_deep_warn t = match t with {
+    Leaf (Leaf 1) -> 1;
+    Leaf (Leaf 3) -> 3;
+    Node (Leaf a) r -> tree_deep_warn r;
+    Leaf (Leaf 2) -> 0;
+    Node _ (Node _ _) -> -1;
+    Leaf (Node l r) -> tree_deep_warn l;
+};
+
+
+main =  list_ok_1 [];

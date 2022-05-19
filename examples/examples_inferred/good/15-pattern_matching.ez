@@ -1,13 +1,11 @@
 type Tree a = Leaf a | Node (Tree a) (Tree a);
 
-rightHead : Tree [a] -> a; 
 rightHead lst = match lst with {
     Leaf (h::[]) -> h ;
     Leaf (h::t) -> rightHead (Leaf t) ;
     Node l r -> rightHead r;
 };
 
-algebraicNested : Tree [Tree [a]] -> a;
 algebraicNested t = match t with {
     Leaf [] -> rightHead (Leaf []);
     Leaf [Leaf [x]] -> x;
@@ -16,5 +14,4 @@ algebraicNested t = match t with {
     Node l r as xd -> algebraicNested r;
 };
 
-main : Bool;
 main = rightHead (Node (Leaf [4, 5, 6]) (Leaf [7, 8, 9])) == 9;

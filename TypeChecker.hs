@@ -3,10 +3,10 @@ module TypeChecker (typeCheck) where
 
 import Eazy.ErrM (Err)
 import Eazy.Abs
-import Control.Monad (foldM, when, unless, zipWithM)
+import Control.Monad (foldM, when, unless, zipWithM, zipWithM_)
 import Control.Monad.Trans.State (execStateT, get, put, StateT, gets, modify)
-import Data.Map.Lazy (empty, Map, member, insert, (!?), (!), adjust, singleton)
-import Data.List (nub)
+import Data.Map (empty, Map, member, insert, (!?), (!), filter, keys, foldrWithKey, toList)
+import Data.List (nub, transpose)
 import qualified Data.Set as Set
 import Data.Functor ((<&>))
 import Data.Maybe (catMaybes, isNothing, fromJust, isJust)
@@ -108,6 +108,7 @@ typeCheck (ProgramT _ decls) =
 
 translate :: Bool -> Decl -> EnvM ()
 translate isTop (DeclFunT pos (VarIdent name) ty) = do
+    unless isTop $ fail "Typing inside of let expressions not allowed"
     env <- getE
     pTy@(ty', defined) <- translateFunT ty
     when (name `member` env) $ if defined
@@ -133,22 +134,22 @@ translate isTop (DeclFunc pos (VarIdent name) args expr) = do
         fail $ posToString pos ++ "Conflicting arguments in " ++ name
     ts' <- getNT (1 + length args)
     let ts = EazyVar <$> ts'
-    putE $ adjust (const (EazyFun ts, True)) name (
+    putE $ insert name (EazyFun ts, True) (
         foldr (\(VarIdent a, t) -> insert a (t, True)) env (zip args ts))
     exprType'silence_warn <- deduceExprType expr
     -- extract mappings for ts
     updateM (last ts') exprType'silence_warn -- TODO: remove silence_warn
     funType <- mapExpr (EazyFun ts)
     -- if defined and not equal then error else add type to env
-    case env !? name of
-        Nothing -> putE $ insert name (funType, True) env
-        Just (et, False) -> do
+    case (env !? name, isTop) of
+        (Nothing, _) -> putE $ insert name (funType, True) env
+        (Just (et, True), True) -> fail $ posToString pos ++ "Function " ++ name ++ " is already defined"
+        (Just (et, _), _) -> do
             ok <- unify funType et
             when (isNothing ok) $ fail $ posToString pos ++
                 "Type mismatch in " ++ name ++ ": " ++ show et ++ " != " ++ show funType
-            putE $ adjust (const (fromJust ok, True)) name env
-        Just (et, True) -> fail $ posToString pos ++ "Function " ++ name ++ " is already defined"
-    
+            putE $ insert name (fromJust ok, True)  env
+
     -- if top_translate then reset Types and mappings else do nothing
     when isTop resetT
 
@@ -162,13 +163,13 @@ mapExpr et = case et of
 
 deduceExprType :: Expr' BNFC'Position -> EnvM EazyType
 deduceExprType (ExpLit _ lit) = return $ case lit of
-    LitInt _ v ->  EazyInt
+    LitInt _ _ ->  EazyInt
     _ -> EazyBool
 
 deduceExprType (ExpVar pos (VarIdent name)) = do
     env <- getE
     case env !? name of
-        Just (t@(EazyFun _), True) -> replaceFV t
+        Just (t@(EazyFun _), _) -> replaceFV t
         Just (EazyVar v, _) -> getM v <&> (\case {Just t -> t; Nothing -> EazyVar v})
         Just (t, True) -> return t
         _ -> fail $ posToString pos ++ "\"" ++ name ++ "\" is not defined"
@@ -262,34 +263,26 @@ deduceExprType (ExpChn pos expr expr') = do
 
 deduceExprType (ExpLst pos exprs) = case exprs of
     [] -> getT <&> (EazyList . EazyVar)
-    [expr] -> do
-        exprType <- deduceExprType expr
-        return $ EazyList exprType
+    [expr] -> deduceExprType expr <&> EazyList
     h:t -> do
         hType <- deduceExprType h
-        r <- deduceOpTypes pos hType t
-        return $ EazyList r
+        deduceOpTypes pos hType t <&> EazyList
 
 deduceExprType (ExpLet _ decls expr) = do
     env <- getE
-    mapM_ (translate False) decls -- TODO: ignore global types ...
+    mapM_ (translate False) decls
     exprType <- deduceExprType expr
     putE env
     return exprType
 
-deduceExprType (ExpLmb pos ty vis expr) = do -- TODO: remove typing from grammar
+deduceExprType (ExpLmb pos vis expr) = do
     env <- getE
     ts' <- getNT (1 + length vis)
     let ts = EazyVar <$> ts'
     putE $ foldr (\(VarIdent a, t) -> insert a (t, True)) env (zip vis ts)
-
     exprType <- deduceExprType expr
-    -- read mappings
     updateM (last ts') exprType
     funType <- mapExpr (EazyFun ts)
-    -- when (funType /= ty) $
-    --     fail $ posToString pos ++ "Lambda has conflicting type. Got " ++
-    --         show exprType ++ " and " ++ show expectedExprType
     putE env
     return funType
 
@@ -326,7 +319,7 @@ deduceExprType (ExpApp pos expr expr') = do
 
         _ -> fail $ posToString pos ++ "Expected 0 arguments, got more"
 
-deduceExprType (ExpMth _ expr matchings) = do
+deduceExprType (ExpMth pos expr ms) = do
     exprType' <- deduceExprType expr
     exprType <- foldM (\t (MatchT p pat _) -> do
         patType <- deducePatternType pat
@@ -338,7 +331,10 @@ deduceExprType (ExpMth _ expr matchings) = do
                 show t ++ ", got " ++ show patType
 
         return $ fromJust ok
-        ) exprType' matchings
+        ) exprType' ms
+    c <- matchComplete exprType ((\(MatchT _ a _) -> case a of {PatAs _ p _ -> p; Pat _ p -> p }) <$> ms)
+    when (not c && pos /= Just (0,0)) $
+        warning $ posToString pos ++ "Incomplete pattern match"
 
     start <- getT <&> EazyVar
     foldM (\t (MatchT p apat e) -> do
@@ -359,7 +355,42 @@ deduceExprType (ExpMth _ expr matchings) = do
 
         putE env
         return $ fromJust ok
-        ) start matchings
+        ) start ms
+
+matchComplete :: EazyType -> [Pattern' BNFC'Position] -> EnvM Bool
+matchComplete (EazyVar s) ps = return True
+matchComplete EazyInt ps = return $ hasSink ps
+matchComplete EazyBool ps = return (hasSink ps ||
+    (any (\case {PatLit _ (LitTrue _)  -> True; _ -> False}) ps &&
+        any (\case {PatLit _ (LitFalse _) -> True; _ -> False}) ps))
+matchComplete (EazyList et) ps = return (hasSink ps ||
+    (any (\case {PatLst _ []  -> True; _ -> False}) ps &&
+        any (\case {PatLL _ a b -> hasSink [a] && hasSink [b]; _ -> False}) ps))
+matchComplete (EazyCon s ets) ps = if hasSink ps then return True else do
+    env <- getE
+    let x = Data.Map.filter (\case {(EazyFun a, _) -> case last a of {
+            (EazyCon s' ets') -> s' == s;
+            _ -> False
+        }; _ -> False }) env
+    foldM (\b (k, (EazyFun args', _)) -> if not b then return False else
+        let cons = Prelude.filter (\case PatCon _ (ConIdent c) sps -> c == k; _ -> False) ps
+        in if null cons then return False else
+        let pats = transpose $ map (\case {
+            PatCon _ (ConIdent c) sps -> (\case SubPatT _ p -> p ) <$> sps; _ -> undefined
+            }) cons
+        in do
+            when (s == "Node") $ fail $ show x ++ "\n\n" ++ show cons ++ "\n\n" ++ show pats
+            let (EazyCon _ names', _) = env ! s
+            let names = map (\(EazyVar v) -> v) names'
+            let m = foldl (\m (n, t) -> insert n t m) empty (zip names ets)
+            let args = map (subtypeWith m) args'
+            zipWithM matchComplete args pats <&> and
+        ) True (toList x)
+
+matchComplete (EazyFun ets) _ = fail "Unexpected error - no pattern matching for functions."
+
+hasSink :: [Pattern' BNFC'Position] -> Bool
+hasSink = any (\case {PatDef _ -> True; PatVar _ _ -> True; _ -> False})
 
 replaceFV :: EazyType -> EnvM EazyType
 replaceFV = let
@@ -379,9 +410,10 @@ replaceFV = let
     in fstM . aux empty
 
 unify :: EazyType -> EazyType -> EnvM (Maybe EazyType)
-unify x@(EazyVar a) b = getM a >>= \case
+unify (EazyVar a) x@(EazyVar b) = return $ Just x
+unify x@(EazyVar a) b =  getM a >>= \case
     Nothing -> if b /= x && hasType x b then return Nothing else updateM a b >> return (Just b)
-    Just et -> unify et b
+    Just et -> updateM a b >> unify et b
 unify t (EazyVar b) = unify (EazyVar b) t
 unify (EazyList a) (EazyList b) = unify a b <&> (\case {Just t -> Just $ EazyList t; _ -> Nothing})
 unify (EazyCon a as) (EazyCon b bs) = if a /= b then return Nothing else
@@ -425,7 +457,6 @@ hasType needle haystack = case haystack of
             else any (hasType needle) hts
         _ -> any (hasType needle) hts
 
--- Use a map to replace free variables with locally sensible type
 subtypeWith :: Map String EazyType -> EazyType -> EazyType
 subtypeWith repl (EazyVar s) = case repl !? s of {Nothing -> EazyVar s; Just t -> t}
 subtypeWith repl (EazyList nt) = EazyList $ subtypeWith repl nt
@@ -452,7 +483,6 @@ enrichEnvWithPat p (EazyVar v) = case p of
         nt <- getT <&> EazyVar
         updateM v (EazyList nt)
         env <- getE
-        --when (p == PatLL (Just (10,5)) (PatVar (Just (10,5)) (VarIdent "x")) (PatVar (Just (10,10)) (VarIdent "xs"))) $ fail $ "Not implemented: " ++ show env
         enrichEnvWithPat p (EazyList nt)
 enrichEnvWithPat (PatCon _ (ConIdent name) sps) (EazyCon con ts) = do
     env <- getE
@@ -473,20 +503,11 @@ deducePatternType = let
     aux (PatDef _) = getT <&> EazyVar
     aux (PatVar _ _) = getT <&> EazyVar
     aux (PatLit _ lit) = return $ case lit of {LitInt _ _ -> EazyInt; _ -> EazyBool}
-    aux (PatCon pos (ConIdent name) sps) = do
-        env <- getE
-        case env !? name of
-            Just (EazyFun lst, _) -> do
-                when (length sps + 1 /= length lst) $
-                    fail $ posToString pos ++ "Wrong number of arguments."
-                -- TODO: WHAT THE HECK
-                types <- mapM (\(SubPatT _ pat, et) -> do
-                    patType <- aux pat
-                    return et
-                    ) (zip sps lst)
-                -- TODO: Unify types
-                fstM $ foldM (subtypeConPat pos) (head lst, empty) (zip types (tail lst))
-            _ -> fail $ posToString pos ++ name ++ " is not defined"
+    aux (PatCon pos (ConIdent name) sps) = deduceExprType (ExpCon pos (ConIdent name)) >>= \case
+        EazyFun types -> mapM (\(SubPatT _ p) -> aux p) sps >>=
+            zipWithM_ unify types >>
+            mapExpr (last types)
+        c -> return c
     aux (PatLL pos pat1 pat2) = do
         pat2Type <- aux pat2
         pat1Type <- aux pat1
@@ -505,27 +526,6 @@ deducePatternType = let
                 return $ fromJust ok
                 ) expPatType t <&> EazyList
     in \case {PatAs _ pat _ -> aux pat; Pat _ pat -> aux pat}
-
--- Replacing free variables in patterns
-subtypeConPat :: BNFC'Position -> (EazyType, Map String EazyType) -> (EazyType, EazyType) ->
-            EnvM (EazyType, Map String EazyType)
-subtypeConPat pos (arg, m') (t, next) = case (arg, t) of
-    (_, EazyVar s) -> do
-        -- Unify types
-        ok <- unify arg t
-        when (isNothing ok) $ conflictError pos arg t
-        subtypeConPat pos (arg, m') (fromJust ok, next)
-    (EazyVar s, _) -> if s `member` m'
-        then fail $ posToString pos ++ "Duplicate variable " ++ s ++ " in pattern."
-        else let m = insert s t m' in return (subtypeWith m next, m)
-    (EazyInt, EazyInt) -> return (subtypeWith m' next, m')
-    (EazyBool, EazyBool) -> return (subtypeWith m' next, m')
-    (EazyList et, EazyList nt) -> subtypeConPat pos (nt, m') (et, next)
-    (EazyCon s ets, EazyCon ns nts) -> if s == ns
-        then foldM (subtypeConPat pos) (head nts, m') (zip ets (tail nts))
-        else conflictError pos arg t
-    (EazyFun ets, EazyFun nts) -> foldM (subtypeConPat pos) (head nts, m') (zip ets (tail nts))
-    _ -> conflictError pos arg t
 
 conflictError :: MonadFail m => BNFC'Position -> EazyType -> EazyType -> m a
 conflictError pos arg1 arg2 = fail $ posToString pos ++ "Conflicting pattern types. Got " ++
@@ -552,7 +552,7 @@ translateDataT _ (tname, args) (ConstrT pos (ConIdent fname) types) = do
     let varSet = Set.fromList $ map (\(VarIdent n) -> n) args
     mapM_ (\(a, _) -> errorIfNewVars pos varSet a) types
 
-    let fun = EazyFun ((fst <$> types) ++ [EazyCon tname (devarify <$> args )])
+    let fun = EazyFun ((fst <$> types) ++ [EazyCon tname (devarify <$> args)])
     putE $ insert fname (fun, True) env
 
 errorIfNewVars :: BNFC'Position -> Set.Set String -> EazyType -> EnvM ()

@@ -1,0 +1,3 @@
+noMatchHead lst = match lst with {h::t -> h;};
+
+main = noMatchHead [];

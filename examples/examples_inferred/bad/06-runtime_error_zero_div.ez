@@ -1,0 +1,3 @@
+rememberCholerae x = x / 0;
+
+main = rememberCholerae 13;

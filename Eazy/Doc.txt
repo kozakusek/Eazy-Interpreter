@@ -29,17 +29,17 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in eazy are the following:
   | ``False`` | ``True`` | ``as`` | ``if``
-  | ``in`` | ``lambda`` | ``let`` | ``match``
-  | ``otherwise`` | ``type`` | ``with`` |
+  | ``in`` | ``let`` | ``match`` | ``otherwise``
+  | ``type`` | ``with`` |  |
 
 The symbols used in eazy are the following:
   | -> | [ | ] | (
   | ) | | | = | :
-  | ; | { | } | ||
-  | && | :: | ~ | -
-  | , | + | * | /
-  | == | =/= | > | >=
-  | < | <= | _ |
+  | ; | { | } | lambda:
+  | || | && | :: | ~
+  | - | , | + | *
+  | / | == | =/= | >
+  | >= | < | <= | _
 
 ===Comments===
 Single-line comments begin with ;*.Multiple-line comments are  enclosed with ;) and (;.
@@ -79,7 +79,7 @@ All other symbols are terminals.
   | //Expr// | -> | //Expr3// ``if`` //Expr// ``otherwise`` //Expr//
   |  |  **|**  | ``match`` //Expr// ``with`` ``{`` //[Match]// ``}``
   |  |  **|**  | ``let`` ``{`` //[Decl]// ``}`` ``in`` //Expr//
-  |  |  **|**  | ``lambda`` ``{`` //Type// ``}`` //[VarIdent]// ``->`` //Expr//
+  |  |  **|**  | ``lambda:`` //[VarIdent]// ``->`` //Expr//
   |  |  **|**  | //Expr1// ``||`` //Expr//
   |  |  **|**  | //Expr1//
   | //Expr1// | -> | //Expr2// ``&&`` //Expr1//

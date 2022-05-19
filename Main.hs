@@ -17,7 +17,7 @@ runProgram :: String -> IO ()
 runProgram ts = let
     result = do
         parsed <- pProgram $ myLexer ts
-        let enriched = parsed --enriched <- enrich parsed
+        enriched <- enrich parsed
         warns <- typeCheck enriched
         interpreted <- interpret enriched
         result <- evalMain interpreted

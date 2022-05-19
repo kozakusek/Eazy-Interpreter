@@ -53,7 +53,7 @@ separator Decl ";" ;
 ExpIf.   Expr ::= Expr3 "if" Expr "otherwise" Expr ;
 ExpMth.  Expr ::= "match" Expr "with" "{" [Match] "}" ;
 ExpLet.  Expr ::= "let" "{" [Decl] "}" "in" Expr ;
-ExpLmb.  Expr ::= "lambda" "{" Type "}" [VarIdent] "->" Expr ;
+ExpLmb.  Expr ::= "lambda:" [VarIdent] "->" Expr ;
 
 ExpOr.   Expr ::= Expr1 "||" Expr ;
 
