@@ -18,7 +18,7 @@ data EazyType =
     EazyVar String |
     EazyList EazyType |
     EazyCon String [EazyType] |
-    EazyFun [EazyType] deriving (Show) -- TODO: implement nice show
+    EazyFun [EazyType] deriving (Show)
 
 type TypeDef = (EazyType, Bool)
 
@@ -138,7 +138,7 @@ translate isTop (DeclFunc pos (VarIdent name) args expr) = do
         foldr (\(VarIdent a, t) -> insert a (t, True)) env (zip args ts))
     exprType'silence_warn <- deduceExprType expr
     -- extract mappings for ts
-    updateM (last ts') exprType'silence_warn -- TODO: remove silence_warn
+    updateM (last ts') exprType'silence_warn
     funType <- mapExpr (EazyFun ts)
     -- if defined and not equal then error else add type to env
     case (env !? name, isTop) of

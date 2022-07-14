@@ -1,36 +1,47 @@
-# Eazy Język Funkcyjny
+# Eazy Functional Language (Interpreter)
 
-Wszystkie konstrukcje w języku Eazy są typowe i niewymagające elaboracji.
+### The language supports i.a. 
 
-* Infiksowe operatory arytmetyczne: `+, -, *, /`
-* Infiksowe operatory logiczne: `&&, ||, ==, =/=, <, >, <=, >=`
-* Operator arytmetycznej zmiany znaku: `-`
-* Operator logiczny: `~`
-* Konstrukcja "IF": `(wyrażenie) if (warunek) otherwise (wyrażenie)`
-* Konstrukcja "MATCH": `match (wyrażenie) with { (wzorzec -> wyrażenie)+ }`
-    * We wzorcu dopuszczalna jest konstrukcja `wzorzec as id`
-* Konstrukcja "LET": `let { (deklaracje) } in (wyrażenie)`
-* Funkcje anonimowe: `lambda{ (typ) } (parametry) -> (wyrażenie)`
-* Konsntrukcja list: `[ (wyrażenia) ], głowa :: ogon`
-* Deklarowanie typu funkcji: `(nazwa) : (typ)`
-* Tworzenie nowych typów: `type (Nazwa) (parametry) = (Opcja1) (parametry) | (Opcja2) (parametry) | ...`
-* Komentarze: `;) (treść) (;, ;* (treść)`
++ partial application and higher order functions
++ algebraic polymorphic data types with recursion
++ nested pattern matching
++ warnings about incomplete pattern matching
++ type inference algorithm
++ complete static typing
 
-Zrealizowane podpunkty:
-+  01 (dwa typy)
-+  02 (arytmetyka, porównania)
-+  03 (if)
-+  04 (funkcje wieloargumentowe, rekurencja)
-+  05 (funkcje anonimowe i wyższego rzędu, częściowa aplikacja)
-+  06 (obsługa błędów wykonania)
-+  07 (statyczne wiązanie identyfikatorów)
-+  08 (z pattern matchingiem)  
-+  10 (lukier)
-+  11 (listy dowolnego typu, zagnieżdżone i listy funkcji)
-+  12 (proste typy algebraiczne z jednopoziomowym pattern matchingiem)
-+  13 (statyczne typowanie)
-+  14 (ogólne polimorficzne i rekurencyjne typy algebraiczne)
-+  15 (zagnieżdżony pattern matching)
 
-Dodatkowo w języku pojawiły się eksperymentalnie funkcje polimorficzne.
+### Syntax 
+All constructions in the Eazy Language are typical and do not require elaboration. Examples can be found in the `examples` direcotry.
 
+* Infix arithmetic operators: `+, -, *, /`
+* Infix logical operators: `&&, ||, ==, =/=, <, >, <=, >=`
+* Arithmetic negation: `-`
+* Logical negation: `~`
+* "IF" clause: `(wyrażenie) if (warunek) otherwise (wyrażenie)`
+* "MATCH" construction: `match (wyrażenie) with { (wzorzec -> wyrażenie)+ }`
+    * Match naming convention:  `wzorzec as id`
+* "LET" construction: `let { (deklaracje) } in (wyrażenie)`
+* Anonymous functions: `lambda{ (typ) } (parametry) -> (wyrażenie)`
+* Lists constructions: `[ (wyrażenia) ], głowa :: ogon`
+* Function type declarations: `(nazwa) : (typ)`
+* Creating new times: `type (Nazwa) (parametry) = (Opcja1) (parametry) | (Opcja2) (parametry) | ...`
+* Comments: `;) (treść) (;, ;* (treść)`
+
+
+### Grammar 
+
+The syntax parser was generated using the [BNF converter](https://bnfc.digitalgrammars.com/).
+The grammar can be found in the file `eazy.cf`.
+
+### Running
+
+After aquiring the `bnfc` execuatble, set the `BNFC_PATH` in the `Makefile` accordingly.
+Afterwards run `make` in the directory with source files. Then the interpreter can be run in 2 ways:  
+1: Reading from stdin until `^D`
+```
+./interpreter 
+```
+2: Reading from a file
+```
+./interpreter path_to_file.ez
+```
